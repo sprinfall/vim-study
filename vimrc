@@ -125,6 +125,9 @@ let python_highlight_all = 1
 
 Plugin 'Glench/Vim-Jinja2-Syntax'
 
+" Ruby
+Plugin 'vim-ruby/vim-ruby'
+
 " Go
 Plugin 'fatih/vim-go'
 "Plugin 'Blackrush/vim-gocode'
@@ -298,12 +301,12 @@ set cinoptions=t0,g0,:0
 " For c, cfg, cmake, go, python, sql, vim, etc.
 set expandtab | set ts=4 | set sw=4
 
-au FileType cpp,html,lua,javascript,objc set expandtab | set ts=2 | set sw=2
+au FileType cpp,html,lua,javascript,objc,ruby set expandtab | set ts=2 | set sw=2
 au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
 
 " textwidth is useful to formating comments.
-set textwidth=80
+" set textwidth=80
 
 " Highlight the specified column(s), but it makes redrawing slower.
 " set colorcolumn=+1
@@ -558,6 +561,8 @@ autocmd FileType cpp map <buffer> <leader>nb :!node-gyp configure build<CR>
 
 autocmd FileType vim map <buffer> <leader><space> :source %<CR>
 autocmd FileType lua map <buffer> <leader><space> :!lua %<CR>
+
+autocmd FileType ruby map <buffer> <leader><space> :!ruby %<CR>
 
 "autocmd BufWritePost *.py call Flake8()
 autocmd FileType python map <buffer> <leader><space> :!python %<CR>
