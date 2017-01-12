@@ -1,6 +1,3 @@
-" vimrc
-" Author: sprinfall@gmail.com
-" Update: 2016-09-04
 
 "-------------------------------------------------------------------------------
 " Encoding, Font, etc.
@@ -25,10 +22,11 @@ if has("gui_running")
         " Make sure 'encoding' is "utf-8" and "guifontset" is empty or invalid. (except GTK+ 2)
         "set guifontwide=SimSun-18030,Arial_Unicode_MS
 
+        set guioptions-=m  " No menu
     endif
 
-    set guioptions-=m  " No menu (doesn't work on GTK)
-    set guioptions-=e  " Console style tab
+    " Prefer console style UI.
+    set guioptions-=e  " Use console style tab
     set guioptions-=T  " No toolbar
 endif
 
@@ -38,37 +36,46 @@ if has("win32")
     set shellslash
 endif
 
+" for chinese
+set formatoptions+=mM
+
+"set listchars=trail:-
+
 let mapleader = ","
 let g:mapleader = ","
 
+" &ft is empty for csv files, set to text.
+au BufRead,BufNewFile *.csv setfiletype text
+
 "-------------------------------------------------------------------------------
-" Vundle - Plugin Management
+" Vundle
+
+let enable_ycm = 0
 
 filetype off
 
-if has("win32")
-    set rtp+=~/vimfiles/bundle/Vundle.vim
-else
+"if has("win32")
+"    set rtp+=~/vimfiles/bundle/Vundle.vim
+"else
     set rtp+=~/.vim/bundle/Vundle.vim
-endif
+"endif
 call vundle#begin()
 
 " let Vundle manage Vundle
 Plugin 'VundleVim/Vundle.vim'
 
+Plugin 'vim-scripts/a.vim'
 Plugin 'godlygeek/tabular'
 Plugin 'majutsushi/tagbar'
 Plugin 'scrooloose/nerdtree'
-
 Plugin 'hrp/EnhancedCommentify'
-
 "Plugin 'msanders/snipmate.vim'
 "Plugin 'tpope/vim-fugitive'
 
 Plugin 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
 let g:indentLine_color_term = 0
-let g:indentLine_char = '¦'
+let g:indentLine_char = '|'
 
 " Parentheses enhancements.
 Plugin 'kien/rainbow_parentheses.vim'
@@ -99,38 +106,27 @@ let g:vim_markdown_folding_disabled = 1
 
 " C++
 Plugin 'vim-scripts/STL-improved'
-Plugin 'vim-scripts/a.vim'
 
 " Python
 " Static code checker and style checker for Python based on flake8.
 Plugin 'nvie/vim-flake8'
 
-" Auto-completion plugin for Python based on jedi.
-" $ pip install jedi
-" NOTE: YouCompleteMe seems better. (but you still need to install jedi via pip.)
-Plugin 'davidhalter/jedi-vim'
-
-" jedi-vim
-" Force Python version to avoid the auto-detection in jedi#init_python().
-" The auto-detection is not efficient and might not work.
-let g:jedi#force_py_version = 2
-let g:jedi#popup_on_dot = 0
-" Default <Ctrl-Space> conflicts with Chinese input method program.
-let g:jedi#completions_command = "<C-N>"
-let g:jedi#auto_vim_configuration = 0
-let g:jedi#use_splits_not_buffers = "bottom"
-
 Plugin 'hdima/python-syntax'
 let python_highlight_all = 1
 
-Plugin 'Glench/Vim-Jinja2-Syntax'
+if enable_ycm == 0
+    " Auto-completion plugin for Python based on jedi (pip install jedi).
+    Plugin 'davidhalter/jedi-vim'
+endif
 
-" Ruby
-Plugin 'vim-ruby/vim-ruby'
+Plugin 'Glench/Vim-Jinja2-Syntax'
 
 " Go
 Plugin 'fatih/vim-go'
-"Plugin 'Blackrush/vim-gocode'
+" Plugin 'Blackrush/vim-gocode'
+
+" Ruby
+Plugin 'vim-ruby/vim-ruby'
 
 " HTML
 Plugin 'mattn/emmet-vim'  " Zen coding
@@ -139,18 +135,21 @@ Plugin 'mattn/emmet-vim'  " Zen coding
 Plugin 'docunext/closetag.vim'
 let g:closetag_html_style=1
 
-" JavaScript
+" JS
 Plugin 'wookiehangover/jshint.vim'
 Plugin 'moll/vim-node'
 
-" Complete
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'rdnetto/YCM-Generator'
+if enable_ycm != 0
+    Plugin 'Valloric/YouCompleteMe'
+	Plugin 'rdnetto/YCM-Generator'
+endif
 
 " 自动补全单引号，双引号等
 Plugin 'Raimondi/delimitMate'
 " for python docstring ", 优化输入
 au FileType python let b:delimitMate_nesting_quotes = ['"']
+
+Plugin 'ervandew/supertab'
 
 " Color schemes
 
@@ -228,14 +227,27 @@ au FileType go nmap <leader>dv <Plug>(go-def-vertical)
 au FileType go nmap <leader>i <Plug>(go-info)
 au FileType go nmap <leader>s <Plug>(go-implements)
 
-" YouCompleteMe
-let g:ycm_error_symbol = '>>'
-let g:ycm_warning_symbol = '>*'
-let g:ycm_extra_conf_globlist = ['~/proj/*']
-nnoremap <leader>gl :YcmCompleter GoToDeclaration<CR>
-nnoremap <leader>gf :YcmCompleter GoToDefinition<CR>
-nnoremap <leader>gg :YcmCompleter GoToDefinitionElseDeclaration<CR>
-nmap <F4> :YcmDiags<CR>
+if enable_ycm == 0
+    " jedi-vim
+    " Force Python version to avoid the auto-detection in jedi#init_python().
+    " The auto-detection is not efficient and might not work.
+    let g:jedi#force_py_version = 3
+    let g:jedi#popup_on_dot = 0
+    " Default <Ctrl-Space> conflicts with Chinese input method program.
+    let g:jedi#completions_command = "<C-N>"
+    let g:jedi#auto_vim_configuration = 0
+    let g:jedi#use_splits_not_buffers = "bottom"
+endif
+
+if enable_ycm != 0
+    " YouCompleteMe
+    let g:ycm_error_symbol = '>>'
+    let g:ycm_warning_symbol = '>*'
+    nnoremap <leader>gl :YcmCompleter GoToDeclaration<CR>
+    nnoremap <leader>gf :YcmCompleter GoToDefinition<CR>
+    nnoremap <leader>gg :YcmCompleter GoToDefinitionElseDeclaration<CR>
+    nmap <F4> :YcmDiags<CR>
+endif
 
 "-------------------------------------------------------------------------------
 " General
@@ -249,9 +261,9 @@ set noswapfile
 
 " Persistent undo serializes to a file named '.<filename>.un~'.
 " That's a little anoying.
-if v:version >= 730
-    set undofile " .
-endif
+"if v:version >= 730
+"    set undofile " .
+"endif
 
 nmap <leader>w :w!<CR>
 nmap <leader>f :find<CR>
@@ -301,27 +313,23 @@ set cinoptions=t0,g0,:0
 " For c, cfg, cmake, go, python, sql, vim, etc.
 set expandtab | set ts=4 | set sw=4
 
-au FileType cpp,html,lua,javascript,objc,ruby set expandtab | set ts=2 | set sw=2
+au FileType cpp,html,lua,javascript,nsis,objc,ruby set expandtab | set ts=2 | set sw=2
 au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
 
 " textwidth is useful to formating comments.
 " set textwidth=80
 
+" linebreak makes sense only when wrap is on & list is off(nolist)
+set linebreak
+
 " Highlight the specified column(s), but it makes redrawing slower.
 " set colorcolumn=+1
 
 set nowrap
-au FileType html,markdown,xml,text set wrap
+au FileType ant,html,markdown,xml,text set wrap
 
-" 'linebreak' makes sense only when wrap is on.
-set linebreak
 set breakindent
-
-" For Chinese
-set formatoptions+=mM
-
-"set listchars=trail:-
 
 "-------------------------------------------------------------------------------
 " Color Scheme
@@ -571,6 +579,11 @@ autocmd FileType python map <buffer> <leader>t :!python -m doctest -v %<CR>
 autocmd FileType python map <buffer> <leader>u :!python -m unittest -v %:r<CR>
 
 autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
+
+if has('win32')
+    " Run with 32-bit python.
+    command! -nargs=0 Py32 :!C:/Python27-32/python.exe %
+endif
 
 "-------------------------------------------------------------------------------
 " Ctags
