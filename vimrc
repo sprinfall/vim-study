@@ -1,3 +1,5 @@
+" vimrc
+" Author: sprinfall@gmail.com
 
 "-------------------------------------------------------------------------------
 " Encoding, Font, etc.
@@ -30,11 +32,13 @@ if has("gui_running")
     set guioptions-=T  " No toolbar
 endif
 
-if has("win32")
-    " Expand file path using / instead of \ on Windows.
-    " See expand().
-    set shellslash
-endif
+" NOTE: (2017-02-07)
+" If set shellslash, jedi-vim will be broken.
+" See https://github.com/davidhalter/jedi-vim/issues/447 (commented by bimlas)
+" if has("win32")
+    " Expand file path using / instead of \ on Windows. See expand().
+    " set shellslash
+" endif
 
 " for chinese
 set formatoptions+=mM
@@ -50,7 +54,7 @@ au BufRead,BufNewFile *.csv setfiletype text
 "-------------------------------------------------------------------------------
 " Vundle
 
-let enable_ycm = 0
+let enable_ycm = 1
 
 filetype off
 
@@ -103,14 +107,22 @@ let g:rbpt_loadcmd_toggle = 0
 " Markdown
 Plugin 'plasticboy/vim-markdown'
 let g:vim_markdown_folding_disabled = 1
+" TODO: conceal
+" let g:vim_markdown_conceal = 0
+" set conceallevel=0
 
 " C++
 Plugin 'vim-scripts/STL-improved'
 
-" Python
-" Static code checker and style checker for Python based on flake8.
-Plugin 'nvie/vim-flake8'
+" Rust
+Plugin 'rust-lang/rust.vim'
 
+" NOTE:
+" For auto-complete, YCM is prefered to vim-racer.
+" Actually, I can't make vim-racer work on Windows because of the incorrect
+" value of col('.').
+
+" Python
 Plugin 'hdima/python-syntax'
 let python_highlight_all = 1
 
@@ -144,12 +156,18 @@ if enable_ycm != 0
 	Plugin 'rdnetto/YCM-Generator'
 endif
 
-" 自动补全单引号，双引号等
+" Async Lint Engine
+Plugin 'w0rp/ale'
+
+" Auto-complete brackets.
 Plugin 'Raimondi/delimitMate'
-" for python docstring ", 优化输入
+" For Python docstring.
 au FileType python let b:delimitMate_nesting_quotes = ['"']
 
-Plugin 'ervandew/supertab'
+if enable_ycm == 0
+    " Supertab is obsoleted by YCM.
+    Plugin 'ervandew/supertab'
+endif
 
 " Color schemes
 
@@ -206,7 +224,8 @@ nmap <F8> :TagbarToggle<CR>
 let g:EnhCommentifyRespectIndent = 'Yes'
 let g:EnhCommentifyPretty = 'Yes'
 
-set completeopt=menuone,longest,preview
+" No 'preview'.
+set completeopt=menuone,longest
 
 " vim-go
 let g:go_fmt_autosave = 0
@@ -229,14 +248,15 @@ au FileType go nmap <leader>s <Plug>(go-implements)
 
 if enable_ycm == 0
     " jedi-vim
-    " Force Python version to avoid the auto-detection in jedi#init_python().
-    " The auto-detection is not efficient and might not work.
-    let g:jedi#force_py_version = 3
-    let g:jedi#popup_on_dot = 0
+    "let g:jedi#force_py_version = 3
+    "let g:jedi#auto_vim_configuration = 0
+    let g:jedi#popup_on_dot = 1
+    let g:jedi#popup_select_first = 1
     " Default <Ctrl-Space> conflicts with Chinese input method program.
     let g:jedi#completions_command = "<C-N>"
-    let g:jedi#auto_vim_configuration = 0
     let g:jedi#use_splits_not_buffers = "bottom"
+    let g:jedi#rename_command = "<leader>r"
+    let g:jedi#documentation_command = "K"
 endif
 
 if enable_ycm != 0
@@ -572,7 +592,6 @@ autocmd FileType lua map <buffer> <leader><space> :!lua %<CR>
 
 autocmd FileType ruby map <buffer> <leader><space> :!ruby %<CR>
 
-"autocmd BufWritePost *.py call Flake8()
 autocmd FileType python map <buffer> <leader><space> :!python %<CR>
 autocmd FileType python map <buffer> <leader>t :!python -m doctest -v %<CR>
 " %:r file name without extension. Help 'expand' for details.
@@ -583,229 +602,10 @@ autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
 if has('win32')
     " Run with 32-bit python.
     command! -nargs=0 Py32 :!C:/Python27-32/python.exe %
+
+    " Please add the path of makensis.exe to PATH.
+    autocmd FileType nsis map <buffer> <leader><space> :!makensis.exe %<CR>
 endif
 
-"-------------------------------------------------------------------------------
-" Ctags
-" YCM is prefered.
-
-" Call a function only if it exists.
-func! CallIf(funcname, arglist)
-    if exists("*".a:funcname)
-        return call(a:funcname, a:arglist)
-    endif
-endfunc
-
-" Call a function only once.
-func! CallOnce(funcname, arglist)
-    let l:flag = "g:called_".a:funcname
-    if !exists("*".a:funcname) || exists(l:flag)
-        return
-    endif
-    exec "let ".l:flag."=1"
-    return call(a:funcname, a:arglist)
-endfunc
-
-" g:tags_dict = {
-"     cpp : ['cpp1/tags', 'cpp2/tags', ...],
-"     java : ['java1/tags', 'java2/tags', ...],
-"     ...
-" }
-let g:tags_dict = {}
-let g:tags_dict["all"] = []
-
-" The environment variable 'ctags_db' is with format:
-"   [c,cpp]path/to/stl_tags;[cpp]path/to/qt_tags;[java]path/to/java_tags;...
-" This function parses it and save results in g:tags_dict.
-func! ParseTagsFromEnvVar()
-    if $CTAGS_DB == ""
-        return
-    endif
-    let l:ctags_db_list = split($CTAGS_DB, ';')
-    for l:ctags_db in l:ctags_db_list
-        if strlen(l:ctags_db) == 0
-            continue
-        endif
-        if l:ctags_db[0] == '['
-            let l:i = stridx(l:ctags_db, ']')
-            if l:i != -1
-                let l:langs = split(strpart(l:ctags_db, 1, l:i-1), ',')
-                let l:langs_tags = escape(expand(strpart(l:ctags_db, l:i+1)), ' ')
-                for l:lang in l:langs
-                    if !has_key(g:tags_dict, l:lang)
-                        let g:tags_dict[l:lang] = []
-                    endif
-                    call add(g:tags_dict[l:lang], l:langs_tags)
-                endfor
-            endif
-        else
-            call add(g:tags_dict["all"], l:ctags_db)
-        endif
-    endfor
-endfunc
-
-func! AddTagsForFileType(ft)
-    if (has_key(g:tags_dict, a:ft))
-        for l:ft_tag in g:tags_dict[a:ft]
-            if filereadable(l:ft_tag)
-                exec 'set tags+='.l:ft_tag
-            endif
-        endfor
-    endif
-endfunc
-
-func! AddTagsForAll()
-    for l:o_tag in g:tags_dict["all"]
-        if filereadable(l:o_tag)
-            exec 'set tags+='.l:o_tag
-        endif
-    endfor
-endfunc
-
-" Execute ctags with options for the given filetype.
-" @tags_path The path of the tags to generate.
-" @files The path of a file or directory, absolute or not.
-" @append Whether to use -a option of ctags.
-func! ExecCtagsForFile(ft, tags_path, file_path, append)
-    let l:ctags_cmd = "!ctags "
-    if a:append != 0 " Append tags to existing tag file.
-        let l:ctags_cmd = l:ctags_cmd."-a "
-    endif
-    let l:ctags_cmd = l:ctags_cmd."-f ".a:tags_path
-    if a:ft == "cpp"
-        let l:ctags_cmd = l:ctags_cmd." --c++-kinds=+p --fields=+iaS --extra=+q --languages=c++ ".a:file_path
-    else
-        " TODO
-        let l:ctags_cmd = l:ctags_cmd." --fields=+iaS --extra=+q ".a:file_path
-    endif
-    exec l:ctags_cmd
-endfunc
-
-" Execute ctags for a given directory.
-" @tags_path The path of the tags to generate.
-" @dir The directory.
-func! ExecCtagsForDir(tags_path, dir, ctags_option)
-    let l:ctags_cmd = "!ctags -f ".a:tags_path
-    if !empty(a:ctags_option)
-        let l:ctags_cmd = l:ctags_cmd." ".a:ctags_option
-    endif
-    exec l:ctags_cmd." -R ".a:dir
-endfunc
-
-" E.g., given '1/2/3', get '1/2'.
-func! DirUpper(dir)
-    let l:last_slash = strridx(a:dir, '/')
-    if l:last_slash != -1
-        return strpart(a:dir, 0, l:last_slash)
-    else
-        return ""
-    endif
-endfunc
-
-" Get the upper directory where the file 'ctags.generate' is presented.
-func! GetTagsProjDir()
-    let l:dir = expand("%:p:h")
-    while !empty(l:dir)
-        let l:genfile = l:dir."/ctags.generate"
-        if filereadable(l:genfile)
-            break
-        else
-            let l:dir = DirUpper(l:dir)
-        endif
-    endwhile
-    echo "tags proj dir: ". l:dir
-    return l:dir
-endfunc
-
-" Generate tags for the given file in the upper directory where the file
-" 'ctags.generate' is presented.
-func! GenTagsForFile(file)
-    let l:generated = 0
-    let l:dir = DirUpper(a:file)
-    while 1
-        if empty(l:dir)
-            break
-        endif
-        let l:genfile = l:dir."/ctags.generate"
-        if filereadable(l:genfile)
-            " Now we ignore the ctags option specified in file ctags.generate.
-            " Note the tags path or files dir should be surrounded by "" ('' doesn't work).
-            call ExecCtagsForFile(&ft, '"'.l:dir.'/tags"', '"'.a:file.'"', 1)
-            let l:generated = 1
-            break
-        else
-            let l:dir = DirUpper(l:dir)
-        endif
-    endwhile
-    " Generate in current dir.
-    if l:generated == 0
-        let l:dir = DirUpper(a:file)
-        call ExecCtagsForFile(&ft, '"'.l:dir.'/tags"', '"'.a:file.'"', 1)
-    endif
-    " Add the tags.
-    exec 'set tags+='.escape(l:dir, ' ').'/tags'
-endfunc
-
-func! GenTagsForCurrFile()
-    return GenTagsForFile(expand("%:p"))
-endfunc
-
-" Generate tags in the upper directory where the file 'ctags.generate' is presented.
-func! GenTagsForProj(dir)
-    let l:dir = a:dir
-    while 1
-        if empty(l:dir)
-            break
-        endif
-        let l:genfile = l:dir."/ctags.generate"
-        if filereadable(l:genfile)
-            let l:ctags_option = ""
-            let l:line1 = readfile(l:genfile, "", 1)
-            if !empty(l:line1)
-                let l:ctags_option = l:line1[0]
-            endif
-            " Note the tags path or files dir should be surrounded by "" ('' doesn't work).
-            " If ctags option is not specified, default is used.
-            call ExecCtagsForDir('"'.l:dir.'/tags"', '"'.l:dir.'"', l:ctags_option)
-            " Add the tags.
-            exec 'set tags+='.escape(l:dir, ' ').'/tags'
-            break
-        else
-            echo l:dir
-            let l:dir = DirUpper(l:dir)
-            echo "updir: ".l:dir
-        endif
-    endwhile
-endfunc
-
-func! GenTagsForCurrProj()
-    return GenTagsForProj(expand("%:p:h"))
-endfunc
-
-" Add tags in the upper directory where the file 'ctags.generate' is presented.
-func! AddTagsForCurrProj()
-    let l:dir = GetTagsProjDir()
-    if !empty(l:dir)
-        let l:tags_path = escape(l:dir, ' ').'/tags'
-        exec 'set tags+='.l:tags_path
-        echo "tags added: ".l:tags_path
-    endif
-endfunc
-
-" Add the tags in CWD.
-if filereadable("tags")
-    set tags+=tags
-endif
-
-" Load tags dictionary.
-call ParseTagsFromEnvVar()
-
-" Auto command to add tags by file type.
-au BufReadPost * :call CallOnce("AddTagsForFileType", [&ft])
-
-" Add other tags.
-call AddTagsForAll()
-
-map <silent> <F12> :call GenTagsForCurrProj()<CR><CR>
-map <silent> <F11> :call AddTagsForCurrProj()<CR><CR>
+autocmd FileType rust map <buffer> <leader><space> :RustRun<CR>
 
