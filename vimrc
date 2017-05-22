@@ -601,7 +601,7 @@ autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
 
 if has('win32')
     " Run with 32-bit python.
-    command! -nargs=0 Py32 :!C:/Python27-32/python.exe %
+    command! -nargs=0 Py32 :!C:/Python36-32/python.exe %
 
     " Please add the path of makensis.exe to PATH.
     autocmd FileType nsis map <buffer> <leader><space> :!makensis.exe %<CR>
