@@ -54,15 +54,12 @@ au BufRead,BufNewFile *.csv setfiletype text
 "-------------------------------------------------------------------------------
 " Vundle
 
-let enable_ycm = 1
+let enable_ycm = 0
+let enable_jedi = 0
 
 filetype off
 
-"if has("win32")
-"    set rtp+=~/vimfiles/bundle/Vundle.vim
-"else
-    set rtp+=~/.vim/bundle/Vundle.vim
-"endif
+set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
 " let Vundle manage Vundle
@@ -73,8 +70,6 @@ Plugin 'godlygeek/tabular'
 Plugin 'majutsushi/tagbar'
 Plugin 'scrooloose/nerdtree'
 Plugin 'hrp/EnhancedCommentify'
-"Plugin 'msanders/snipmate.vim'
-"Plugin 'tpope/vim-fugitive'
 
 Plugin 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
@@ -107,9 +102,8 @@ let g:rbpt_loadcmd_toggle = 0
 " Markdown
 Plugin 'plasticboy/vim-markdown'
 let g:vim_markdown_folding_disabled = 1
-" TODO: conceal
-" let g:vim_markdown_conceal = 0
-" set conceallevel=0
+let g:vim_markdown_conceal = 0
+set conceallevel=0
 
 " C++
 Plugin 'vim-scripts/STL-improved'
@@ -126,30 +120,16 @@ Plugin 'rust-lang/rust.vim'
 Plugin 'hdima/python-syntax'
 let python_highlight_all = 1
 
-if enable_ycm == 0
+if enable_jedi != 0
     " Auto-completion plugin for Python based on jedi (pip install jedi).
     Plugin 'davidhalter/jedi-vim'
 endif
 
 Plugin 'Glench/Vim-Jinja2-Syntax'
 
-" Go
-Plugin 'fatih/vim-go'
-" Plugin 'Blackrush/vim-gocode'
-
-" Ruby
-Plugin 'vim-ruby/vim-ruby'
-
-" HTML
-Plugin 'mattn/emmet-vim'  " Zen coding
-
 " Auto-close html/xml tags.
 Plugin 'docunext/closetag.vim'
 let g:closetag_html_style=1
-
-" JS
-Plugin 'wookiehangover/jshint.vim'
-Plugin 'moll/vim-node'
 
 if enable_ycm != 0
     Plugin 'Valloric/YouCompleteMe'
@@ -170,12 +150,6 @@ if enable_ycm == 0
 endif
 
 " Color schemes
-
-Plugin 'altercation/vim-colors-solarized'
-let g:solarized_termtrans=1
-let g:solarized_contrast="normal"
-let g:solarized_visibility="normal"
-
 Plugin 'tomasr/molokai'
 set background=dark
 set t_Co=256
@@ -227,26 +201,7 @@ let g:EnhCommentifyPretty = 'Yes'
 " No 'preview'.
 set completeopt=menuone,longest
 
-" vim-go
-let g:go_fmt_autosave = 0
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_operators = 1
-let g:go_highlight_build_constraints = 1
-
-au FileType go nmap <leader>r <Plug>(go-run)
-au FileType go nmap <leader>b <Plug>(go-build)
-au FileType go nmap <leader>t <Plug>(go-test)
-au FileType go nmap <leader>c <Plug>(go-coverage)
-
-au FileType go nmap <leader>ds <Plug>(go-def-split)
-au FileType go nmap <leader>dv <Plug>(go-def-vertical)
-
-au FileType go nmap <leader>i <Plug>(go-info)
-au FileType go nmap <leader>s <Plug>(go-implements)
-
-if enable_ycm == 0
+if enable_jedi != 0
     " jedi-vim
     "let g:jedi#force_py_version = 3
     "let g:jedi#auto_vim_configuration = 0
@@ -338,13 +293,13 @@ au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
 
 " textwidth is useful to formating comments.
-" set textwidth=80
+"set textwidth=80
 
 " linebreak makes sense only when wrap is on & list is off(nolist)
 set linebreak
 
 " Highlight the specified column(s), but it makes redrawing slower.
-" set colorcolumn=+1
+"set colorcolumn=+1
 
 set nowrap
 au FileType ant,html,markdown,xml,text set wrap
@@ -526,14 +481,14 @@ map <down>  :bl<CR>
 "-------------------------------------------------------------------------------
 " abbr.
 
-iab xname Adam Gu
-iab xmail sprinfall@gmail.com
-iab xfile <c-r>=expand("%:t")<CR>
+iabbrev xname Adam Gu
+iabbrev xmail sprinfall@gmail.com
+iabbrev xfile <c-r>=expand("%:t")<CR>
 
 if exists("*strftime")
     " abbr. for date/time
-    iab xdate <c-r>=strftime("%Y-%m-%d")<CR>
-    iab xtime <c-r>=strftime("%H:%M:%S")<CR>
+    iabbrev xdate <c-r>=strftime("%Y-%m-%d")<CR>
+    iabbrev xtime <c-r>=strftime("%H:%M:%S")<CR>
     " shortcut for date/time
     imap <buffer> <silent> <leader>d <c-r>=strftime("%Y %b %d %X")<CR>
 endif
@@ -589,8 +544,6 @@ autocmd FileType cpp map <buffer> <leader>nb :!node-gyp configure build<CR>
 
 autocmd FileType vim map <buffer> <leader><space> :source %<CR>
 autocmd FileType lua map <buffer> <leader><space> :!lua %<CR>
-
-autocmd FileType ruby map <buffer> <leader><space> :!ruby %<CR>
 
 autocmd FileType python map <buffer> <leader><space> :!python %<CR>
 autocmd FileType python map <buffer> <leader>t :!python -m doctest -v %<CR>
