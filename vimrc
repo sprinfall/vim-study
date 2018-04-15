@@ -1,6 +1,3 @@
-" vimrc
-" Author: sprinfall@gmail.com
-
 "-------------------------------------------------------------------------------
 " Encoding, Font, etc.
 
@@ -14,7 +11,7 @@ set fileencodings=utf-8,ucs-bom,gbk,gb2312,big5,latin1
 
 if has("gui_running")
     if has("gui_gtk")
-        set guifont=Ubuntu\ Mono\ Regular\ 14
+        set guifont=Source\ Code\ Pro\ 13
     elseif has("gui_macvim")
         " TODO Verify
         set guifont=Andale\ Mono:h13,Courier\ New:h13
@@ -32,18 +29,8 @@ if has("gui_running")
     set guioptions-=T  " No toolbar
 endif
 
-" NOTE: (2017-02-07)
-" If set shellslash, jedi-vim will be broken.
-" See https://github.com/davidhalter/jedi-vim/issues/447 (commented by bimlas)
-" if has("win32")
-    " Expand file path using / instead of \ on Windows. See expand().
-    " set shellslash
-" endif
-
-" for chinese
+" For Chinese
 set formatoptions+=mM
-
-"set listchars=trail:-
 
 let mapleader = ","
 let g:mapleader = ","
@@ -54,8 +41,7 @@ au BufRead,BufNewFile *.csv setfiletype text
 "-------------------------------------------------------------------------------
 " Vundle
 
-let enable_ycm = 0
-let enable_jedi = 0
+let enable_ycm = 1
 
 filetype off
 
@@ -70,6 +56,12 @@ Plugin 'godlygeek/tabular'
 Plugin 'majutsushi/tagbar'
 Plugin 'scrooloose/nerdtree'
 Plugin 'hrp/EnhancedCommentify'
+
+Plugin 'vim-airline/vim-airline'
+" NOTE: Airline has been supported by 'gruvbox' color scheme.
+" Plugin 'vim-airline/vim-airline-themes'
+" TODO: Customize airline.
+" let g:airline_section_c = '%<%f | %r%{CurDir()}%h'
 
 Plugin 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
@@ -106,26 +98,15 @@ let g:vim_markdown_conceal = 0
 set conceallevel=0
 
 " C++
-Plugin 'vim-scripts/STL-improved'
-
-" Rust
-Plugin 'rust-lang/rust.vim'
-
-" NOTE:
-" For auto-complete, YCM is prefered to vim-racer.
-" Actually, I can't make vim-racer work on Windows because of the incorrect
-" value of col('.').
+Plugin 'jeaye/color_coded'
 
 " Python
 Plugin 'hdima/python-syntax'
 let python_highlight_all = 1
 
-if enable_jedi != 0
-    " Auto-completion plugin for Python based on jedi (pip install jedi).
-    Plugin 'davidhalter/jedi-vim'
-endif
-
-Plugin 'Glench/Vim-Jinja2-Syntax'
+" Auto-completion plugin for Python based on jedi.
+" Please install jedi with pip.
+Plugin 'davidhalter/jedi-vim'
 
 " Auto-close html/xml tags.
 Plugin 'docunext/closetag.vim'
@@ -133,7 +114,7 @@ let g:closetag_html_style=1
 
 if enable_ycm != 0
     Plugin 'Valloric/YouCompleteMe'
-	Plugin 'rdnetto/YCM-Generator'
+    Plugin 'rdnetto/YCM-Generator'
 endif
 
 " Async Lint Engine
@@ -150,9 +131,11 @@ if enable_ycm == 0
 endif
 
 " Color schemes
-Plugin 'tomasr/molokai'
-set background=dark
-set t_Co=256
+Plugin 'morhetz/gruvbox'
+" Atom OneDark theme.
+Plugin 'joshdick/onedark.vim'
+" Plugin 'drewtempelmeyer/palenight.vim'
+" Plugin 'ayu-theme/ayu-vim'
 
 call vundle#end()
 
@@ -201,31 +184,20 @@ let g:EnhCommentifyPretty = 'Yes'
 " No 'preview'.
 set completeopt=menuone,longest
 
-if enable_jedi != 0
-    " jedi-vim
-    "let g:jedi#force_py_version = 3
-    "let g:jedi#auto_vim_configuration = 0
-    let g:jedi#popup_on_dot = 1
-    let g:jedi#popup_select_first = 1
-    " Default <Ctrl-Space> conflicts with Chinese input method program.
-    let g:jedi#completions_command = "<C-N>"
-    let g:jedi#use_splits_not_buffers = "bottom"
-    let g:jedi#rename_command = "<leader>r"
-    let g:jedi#documentation_command = "K"
-endif
-
 if enable_ycm != 0
-    " YouCompleteMe
-    let g:ycm_error_symbol = '>>'
-    let g:ycm_warning_symbol = '>*'
-    nnoremap <leader>gl :YcmCompleter GoToDeclaration<CR>
-    nnoremap <leader>gf :YcmCompleter GoToDefinition<CR>
-    nnoremap <leader>gg :YcmCompleter GoToDefinitionElseDeclaration<CR>
-    nmap <F4> :YcmDiags<CR>
+    " Only map GoTo since it's very 'smart'.
+    " GotoImprecise is faster.
+    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
+    nnoremap <leader>d :YcmCompleter GoTo<CR>
 endif
 
 "-------------------------------------------------------------------------------
 " General
+
+set background=dark
+syntax enable
+colorscheme gruvbox
+au BufEnter * :syntax sync fromstart
 
 set nocompatible
 set history=400
@@ -233,12 +205,6 @@ set history=400
 set nobackup
 set nowritebackup
 set noswapfile
-
-" Persistent undo serializes to a file named '.<filename>.un~'.
-" That's a little anoying.
-"if v:version >= 730
-"    set undofile " .
-"endif
 
 nmap <leader>w :w!<CR>
 nmap <leader>f :find<CR>
@@ -252,14 +218,11 @@ endif
 " Remove the Windows ^M
 noremap <leader>m :%s/<C-V><C-M>//ge<CR>
 
-" Restore cursor to file position in previous editing session.
-set viminfo='10,\"100,:20,%,n~/.viminfo
-au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
-
 " Automatically save and restore views for files.
+" This can restore cursor positions.
 " NOTE: Using * instead of ?* causes error.
-"au BufWinLeave ?* mkview
-"au BufWinEnter ?* silent loadview
+au BufWinLeave ?* mkview
+au VimEnter ?* silent loadview
 
 " Display dynamic information in tooltip based on where the mouse is pointing.
 if has("balloon_eval")
@@ -276,6 +239,7 @@ set cindent
 " t0: no indent for function return type declaration.
 " g0: no indent for C++ scope declarations ('public:' 'private:' etc.)
 " :0: no indent for labels of switch().
+" TODO: Add j1 for properly indenting lambda (jN was new since 7.4).
 set cinoptions=t0,g0,:0
 
 " NOTE: After expand tab, type "C-v tab" to get the unexpanded tab.
@@ -292,46 +256,18 @@ au FileType cpp,html,lua,javascript,nsis,objc,ruby set expandtab | set ts=2 | se
 au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
 
-" textwidth is useful to formating comments.
-"set textwidth=80
+" Useful for formating comments.
+set textwidth=80
 
-" linebreak makes sense only when wrap is on & list is off(nolist)
+" Highlight column after 'textwidth'
+set colorcolumn=+1
+
+" linebreak makes sense only when wrap is on & list is off (nolist).
 set linebreak
-
-" Highlight the specified column(s), but it makes redrawing slower.
-"set colorcolumn=+1
+set breakindent
 
 set nowrap
 au FileType ant,html,markdown,xml,text set wrap
-
-set breakindent
-
-"-------------------------------------------------------------------------------
-" Color Scheme
-
-if &t_Co > 2 || has("gui_running")
-    set background=dark
-    syntax enable
-    colorscheme desert
-    au BufEnter * :syntax sync fromstart
-endif
-
-"-------------------------------------------------------------------------------
-" Folding (TODO)
-
-" set foldenable
-" set foldlevel=3
-" set foldcolumn=3
-" set foldmethod=indent
-
-"let g:xml_syntax_folding=1
-" ISSUE: JavaScript syntax folding doesn't work event you open it by setting
-" javaScript_fold.
-"let javaScript_fold=1
-
-"syntax sync fromstart
-"au FileType c,cpp,java,xml set foldmethod=syntax
-"au FileType python set foldmethod=indent
 
 "-------------------------------------------------------------------------------
 " User Interface
@@ -375,30 +311,19 @@ set incsearch
 set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
 set hlsearch
 map <silent> <leader><CR> :noh<CR>
-" <tab> is a lot easier to type than %.
+" Tab is much easier to type than %.
 nnoremap <tab> %
 vnoremap <tab> %
 
 set errorbells
 set novisualbell
 
-"set cursorline " highlight current line (make redrawing slower)
-set showmatch " bracets
-set matchtime=1 " 1/10 second to blink
-
-set laststatus=2 " always show statusline
+" Highlight current line.
+set cursorline
 
 func! CurDir()
     return substitute(getcwd(), escape($HOME, '\'), "~", "")
 endfunc
-
-set laststatus=2 " always show statusline
-set statusline=%<%f\ -\ %r%{CurDir()}%h\ %h%m%r%=%k[%{(&fenc==\"\")?&enc:&fenc}%{(&bomb?\",BOM\":\"\")}]\
-            \ \ %-16.(%l/%L,%c%V%)\ \ %P
-" Always set the cwd to the dir of current buffer.
-" Similar to 'Link with Editor' of Package Explorer of Eclipse.
-" TODO: This may make it difficult to generate tags/cscope_db.
-"au BufEnter * :cd %:p:h
 
 " Highlight unwanted spaces.
 " See [http://vim.wikia.com/wiki/Highlight_unwanted_spaces]
@@ -543,6 +468,7 @@ autocmd FileType cpp map <buffer> <leader><space> :!g++ -S %<CR>
 autocmd FileType cpp map <buffer> <leader>nb :!node-gyp configure build<CR>
 
 autocmd FileType vim map <buffer> <leader><space> :source %<CR>
+
 autocmd FileType lua map <buffer> <leader><space> :!lua %<CR>
 
 autocmd FileType python map <buffer> <leader><space> :!python %<CR>
@@ -553,12 +479,8 @@ autocmd FileType python map <buffer> <leader>u :!python -m unittest -v %:r<CR>
 autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
 
 if has('win32')
-    " Run with 32-bit python.
-    command! -nargs=0 Py32 :!C:/Python36-32/python.exe %
-
     " Please add the path of makensis.exe to PATH.
     autocmd FileType nsis map <buffer> <leader><space> :!makensis.exe %<CR>
 endif
 
 autocmd FileType rust map <buffer> <leader><space> :RustRun<CR>
-
