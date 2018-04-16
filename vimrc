@@ -17,8 +17,10 @@ if has("gui_running")
         set guifont=Andale\ Mono:h13,Courier\ New:h13
     elseif has("gui_win32")
         set guifont=DejaVu_Sans_Mono:h11:cDEFAULT,Courier_New:h11:cDEFAULT
-        " Need to download 'GB18030 Support Package' from MS.com for SimSun-18030.
-        " Make sure 'encoding' is "utf-8" and "guifontset" is empty or invalid. (except GTK+ 2)
+        " Need to download 'GB18030 Support Package' from MS.com for
+        " SimSun-18030.
+        " Make sure 'encoding' is "utf-8" and "guifontset" is empty or invalid.
+        " (except GTK+ 2)
         "set guifontwide=SimSun-18030,Arial_Unicode_MS
 
         set guioptions-=m  " No menu
@@ -60,8 +62,6 @@ Plugin 'hrp/EnhancedCommentify'
 Plugin 'vim-airline/vim-airline'
 " NOTE: Airline has been supported by 'gruvbox' color scheme.
 " Plugin 'vim-airline/vim-airline-themes'
-" TODO: Customize airline.
-" let g:airline_section_c = '%<%f | %r%{CurDir()}%h'
 
 Plugin 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
@@ -243,15 +243,16 @@ set cindent
 set cinoptions=t0,g0,:0
 
 " NOTE: After expand tab, type "C-v tab" to get the unexpanded tab.
-" If you have a file that contains tabs then you can convert them to spaces by typing :retab.
+" If you have a file that contains tabs then you can convert them to spaces by
+" typing :retab.
 " :retab replaces a tab with &tabstop/ts number of spaces.
 " For tabstop: default 8. Better not to change it.
 
 "set smarttab
 
+" TODO
 " For c, cfg, cmake, go, python, sql, vim, etc.
 set expandtab | set ts=4 | set sw=4
-
 au FileType cpp,html,lua,javascript,nsis,objc,ruby set expandtab | set ts=2 | set sw=2
 au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
@@ -260,7 +261,7 @@ au FileType make set noexpandtab | set ts=8 | set sw=8
 set textwidth=80
 
 " Highlight column after 'textwidth'
-set colorcolumn=+1
+set colorcolumn=+1,+20
 
 " linebreak makes sense only when wrap is on & list is off (nolist).
 set linebreak
@@ -275,10 +276,8 @@ au FileType ant,html,markdown,xml,text set wrap
 " Enable mouse even for terminals.
 if has("mouse") | set mouse=a | endif
 
-set showcmd " show (partial) command in the last line of the screen.
-set showmode " TODO
-set so=7 " number of lines to curor when moving vertically
-" Show candidates in the statusline when using TAB to complete.
+set showcmd
+set scrolloff=7
 set wildmenu
 set wildmode="list:longest"
 set ruler
@@ -288,10 +287,35 @@ set cmdheight=2
 set number
 
 set lazyredraw
-set hidden " switch buffers without saving
-" allow backspacing over everything in insert mode
+set hidden " Switch buffers without saving
+" Allow backspacing over everything in insert mode
 set backspace=eol,start,indent
 set whichwrap+=<,>,h,l
+
+" Highlight unwanted spaces.
+" See [http://vim.wikia.com/wiki/Highlight_unwanted_spaces]
+" - highlight trailing whitespace in red
+" - have this highlighting not appear whilst you are typing in insert mode
+" - have the highlighting of whitespace apply when you open new buffers
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
+autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
+autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
+autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+autocmd BufWinLeave * call clearmatches() " for performance
+
+" Highlight current line.
+" set cursorline
+
+"-------------------------------------------------------------------------------
+" Search
+
+set ignorecase " Always ignore since we have smartcase.
+set smartcase
+set incsearch
+set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
+set hlsearch
+map <silent> <leader><CR> :noh<CR>
 
 " The 'magic' option is on by default, but that isn't enough.
 " I find 'very magic' is what I want and it makes pattern really easy to use.
@@ -305,37 +329,8 @@ set whichwrap+=<,>,h,l
 nnoremap / /\v
 vnoremap / /\v
 
-set ignorecase " always ignore since we have smartcase.
-set smartcase
-set incsearch
-set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
-set hlsearch
-map <silent> <leader><CR> :noh<CR>
-" Tab is much easier to type than %.
-nnoremap <tab> %
-vnoremap <tab> %
-
 set errorbells
 set novisualbell
-
-" Highlight current line.
-set cursorline
-
-func! CurDir()
-    return substitute(getcwd(), escape($HOME, '\'), "~", "")
-endfunc
-
-" Highlight unwanted spaces.
-" See [http://vim.wikia.com/wiki/Highlight_unwanted_spaces]
-" - highlight trailing whitespace in red
-" - have this highlighting not appear whilst you are typing in insert mode
-" - have the highlighting of whitespace apply when you open new buffers
-highlight ExtraWhitespace ctermbg=red guibg=red
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-autocmd BufWinLeave * call clearmatches() " for performance
 
 " Spelling check
 if has("spell")
@@ -354,44 +349,7 @@ if has("spell")
     map <leader>s? z=
 endif
 
-" Using the list and listchars options:
-func! ListOrNot()
-    if &list
-        set nolist
-    else
-        " TODO: :dig
-        set list listchars=tab:>-,trail:-,eol:$,extends:>,precedes:<
-        "        set list listchars=tab:<-,trail:-,eol:$
-    endif
-endfunc
-map <buffer> <leader>ls :call ListOrNot()<CR>
-
-" Using syntax space errors.
-"let c_space_errors = 1
-"let java_space_errors = 1
-
-" Visual search
-
-" from an idea by Michael Naumann
-func! VisualSearch(direction) range
-    let l:saved_reg = @"
-    exec "normal! vgvy"
-    let l:pattern = escape(@", '\\/.*$^~[]')
-    let l:pattern = substitute(l:pattern, "\n$", "", "")
-    if a:direction == 'b'
-        exec "normal ?" . l:pattern . "^M"
-    else
-        exec "normal /" . l:pattern . "^M"
-    endif
-    let @/ = l:pattern
-    let @" = l:saved_reg
-endfunc
-
-" search for the current selection
-vnoremap <silent> * :call VisualSearch('f')<CR>
-vnoremap <silent> # :call VisualSearch('b')<CR>
-
-" Switch window
+" Switch windows
 map <C-j> <C-W>j
 map <C-k> <C-W>k
 map <C-h> <C-W>h
@@ -403,29 +361,22 @@ map <left>  :bp<CR>
 map <up>    :bf<CR>
 map <down>  :bl<CR>
 
-"-------------------------------------------------------------------------------
-" abbr.
-
+" Abbreviations
 iabbrev xname Adam Gu
 iabbrev xmail sprinfall@gmail.com
 iabbrev xfile <c-r>=expand("%:t")<CR>
-
 if exists("*strftime")
-    " abbr. for date/time
     iabbrev xdate <c-r>=strftime("%Y-%m-%d")<CR>
     iabbrev xtime <c-r>=strftime("%H:%M:%S")<CR>
-    " shortcut for date/time
-    imap <buffer> <silent> <leader>d <c-r>=strftime("%Y %b %d %X")<CR>
 endif
 
+" Delete trailing white spaces.
 func! DeleteTrailingWS()
     exec "normal mz"
     " NOTE: [:%s/ \+$//] works for spaces only.
     %s/\s\+$//ge
     exec "normal `z"
 endfunc
-
-" Delete trailing white spaces on write.
 au BufWrite * :call DeleteTrailingWS()
 map <leader>W :call DeleteTrailingWS()<CR>
 
@@ -448,24 +399,24 @@ func! CurrentFileDir(cmd)
     return a:cmd . " " . expand("%:p:h") . "/"
 endfunc
 
-" Smart mappings on the command line
-cno $h e ~/
-cno $d e ~/Desktop/
-cno $j e ./
+" Smart mappings on the command line.
+" Never used any of them :)
+cnoremap $h e ~/
+cnoremap $d e ~/Desktop/
+cnoremap $j e ./
 
-cno $q <C-\>eDeleteTillSlash()<CR>
+cnoremap $q <C-\>eDeleteTillSlash()<CR>
 
-cno $c e <C-\>eCurrentFileDir("e")<CR>
+cnoremap $c e <C-\>eCurrentFileDir("e")<CR>
 
-cno $tc <C-\>eCurrentFileDir("tabnew")<CR>
-cno $th tabnew ~/
-cno $td tabnew ~/Desktop/
+cnoremap $tc <C-\>eCurrentFileDir("tabnew")<CR>
+cnoremap $th tabnew ~/
+cnoremap $td tabnew ~/Desktop/
 
 "-------------------------------------------------------------------------------
-" File Type Specific
+" Run (TODO: Consider to use make)
 
 autocmd FileType cpp map <buffer> <leader><space> :!g++ -S %<CR>
-autocmd FileType cpp map <buffer> <leader>nb :!node-gyp configure build<CR>
 
 autocmd FileType vim map <buffer> <leader><space> :source %<CR>
 
@@ -478,9 +429,9 @@ autocmd FileType python map <buffer> <leader>u :!python -m unittest -v %:r<CR>
 
 autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
 
+autocmd FileType rust map <buffer> <leader><space> :RustRun<CR>
+
 if has('win32')
     " Please add the path of makensis.exe to PATH.
     autocmd FileType nsis map <buffer> <leader><space> :!makensis.exe %<CR>
 endif
-
-autocmd FileType rust map <buffer> <leader><space> :RustRun<CR>

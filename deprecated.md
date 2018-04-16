@@ -29,6 +29,10 @@ au VimEnter ?* silent loadview
 ```
 详见：https://stackoverflow.com/questions/8854371/vim-how-to-restore-the-cursors-logical-and-physical-positions
 
+2018-04-16: 通过`View`不但可以记住游标位置，一些设置也会被记住，比如
+`cursorline`，这可能并不是我想要的效果。
+得搞清楚`View`具体是干嘛的。
+
 ### 括号匹配
 
 有点花哨的功能。
@@ -37,10 +41,84 @@ set showmatch
 set matchtime=1 " 1/10 second to blink
 ```
 
+### Map TAB to %
+
+在成对的括号间跳转，原本是用 `%`，下面尝试以 `tab` 键代替。
+其实并没有必要，甚至还可能会影响到正常输入，比如会跟 YCM 的Tab补全相冲突。
+```vim
+" Tab is much easier to type than %.
+nnoremap <tab> %
+vnoremap <tab> %
+```
+
+### List chars
+
+一句话，用的很少。
+
+```vim
+" List chars (tab, trailing spaces, EOL, etc.)
+func! ListOrNot()
+    if &list
+        set nolist
+    else
+        " TODO: :dig
+        set list listchars=tab:>-,trail:-,eol:$,extends:>,precedes:<
+        " set list listchars=tab:<-,trail:-,eol:$
+    endif
+endfunc
+map <buffer> <leader>ls :call ListOrNot()<CR>
+```
+
+### Visual Search
+
+现在貌似已经原生支持了。
+`<leader>*`：前向搜索当前游标下的单词。
+`<leader>#`：后向搜索当前游标下的单词。
+然后，按 `n` 或 `N` 就可以在匹配项间跳转了。
+
+```vim
+" from an idea by Michael Naumann
+func! VisualSearch(direction) range
+    let l:saved_reg = @"
+    exec "normal! vgvy"
+    let l:pattern = escape(@", '\\/.*$^~[]')
+    let l:pattern = substitute(l:pattern, "\n$", "", "")
+    if a:direction == 'b'
+        exec "normal ?" . l:pattern . "^M"
+    else
+        exec "normal /" . l:pattern . "^M"
+    endif
+    let @/ = l:pattern
+    let @" = l:saved_reg
+endfunc
+
+" search for the current selection
+vnoremap <silent> * :call VisualSearch('f')<CR>
+vnoremap <silent> # :call VisualSearch('b')<CR>
+```
+
+### Abbreviations
+
+下面这种还是比较实用的：
+```vim
+iabbrev xdate <c-r>=strftime("%Y-%m-%d")<CR>
+iabbrev xtime <c-r>=strftime("%H:%M:%S")<CR>
+```
+但是输入模式的这种就不太实用了（我设置了但是从来没用过）：
+```vim
+if exists("*strftime")
+    imap <buffer> <silent> <leader>d <c-r>=strftime("%Y %b %d %X")<CR>
+endif
+```
+
 ### 状态栏
 
 有了 airline 插件，不需要手动设置了。
 ```vim
+func! CurDir()
+    return substitute(getcwd(), escape($HOME, '\'), "~", "")
+endfunc
+
 " NOTE: Obsoleted by airline
 set laststatus=2 " Always show status line
 set statusline=%<%f\ -\ %r%{CurDir()}%h\ %h%m%r%=%k[%{(&fenc==\"\")?&enc:&fenc}%{(&bomb?\",BOM\":\"\")}]\
@@ -63,16 +141,6 @@ au BufEnter * :cd %:p:h
 if v:version >= 730
     set undofile " .
 endif
-```
-
-### View
-
-没搞清楚是干嘛的。
-```vim
-" Automatically save and restore views for files.
-" NOTE: Using * instead of ?* causes error.
-"au BufWinLeave ?* mkview
-"au BufWinEnter ?* silent loadview
 ```
 
 ### Folding
@@ -104,6 +172,15 @@ Plugin 'octol/vim-cpp-enhanced-highlight'
 
 ## 语言支持
 
+### Space Errors
+
+TODO
+```vim
+" Using syntax space errors.
+let c_space_errors = 1
+let java_space_errors = 1
+```
+
 ## YCM
 
 YCM 自带的诊断功能，有了ALE，就不需要了。
@@ -122,4 +199,11 @@ Plugin 'rust-lang/rust.vim'
 " For auto-complete, YCM is prefered to vim-racer.
 " Actually, I can't make vim-racer work on Windows because of the incorrect
 " value of col('.').
+```
+
+### C++
+
+```vim
+autocmd FileType cpp map <buffer> <leader><space> :!g++ -S %<CR>
+autocmd FileType cpp map <buffer> <leader>nb :!node-gyp configure build<CR>
 ```
