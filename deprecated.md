@@ -2,6 +2,21 @@
 
 ## 一般设置
 
+### Encoding
+
+Normally, `encoding` will be equal to your current locale.
+You can detect the locale by `v:lang`. E.g.,
+```vim
+if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
+```
+To set locale on Linux, exporting `LANG` from `.bashrc` should work.
+```bash
+export LANG=zh_CN.UTF-8
+```
+If you run a desktop, you can always change it from system configurations.
+
+In one word, you don't have to set `encoding` in vimrc, set your system locale instead.
+
 ### shellslash
 
 ```vim
@@ -14,6 +29,11 @@ if has("win32")
 endif
 ```
 
+### Expand Tab
+
+设置`expandtab`后，按Tab键将插入空格。
+如果想插入真正的Tab，可以用`C-v Tab`。
+
 ### Restore Cursor Position
 
 ```vim
@@ -24,14 +44,12 @@ au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|
 上面的方法来自 [Restore cursor to file position in previous editing session](http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session)。
 已经被下面的方法替代了：
 ```vim
+set viewoptions=cursor
 au BufWinLeave ?* mkview
 au VimEnter ?* silent loadview
 ```
+通过`View`不但可以记住游标位置，这里设置`viewoptions=cursor`，表示只想记住cursor。
 详见：https://stackoverflow.com/questions/8854371/vim-how-to-restore-the-cursors-logical-and-physical-positions
-
-2018-04-16: 通过`View`不但可以记住游标位置，一些设置也会被记住，比如
-`cursorline`，这可能并不是我想要的效果。
-得搞清楚`View`具体是干嘛的。
 
 ### 括号匹配
 
@@ -69,7 +87,26 @@ endfunc
 map <buffer> <leader>ls :call ListOrNot()<CR>
 ```
 
-### Visual Search
+### Search
+
+#### Magic, Very Magic
+
+这个设置一直在用，在此备注因为不想在vimrc里放太多注释。
+```vim
+" The 'magic' option is on by default, but that isn't enough.
+" I find 'very magic' is what I want and it makes pattern really easy to use.
+" Here is a find-replace example from 'http://briancarper.net/blog/448/':
+"   without magic:
+"       :%s/^\%(foo\)\{1,3}\(.\+\)bar$/\1/
+"   with very magic:
+"       :%s/\v^%(foo){1,3}(.+)bar$/\1/
+" Always insert a '\v' before the pattern to search to get 'very magic'.
+" :h /\v or :h magic
+nnoremap / /\v
+vnoremap / /\v
+```
+
+#### Visual Search
 
 现在貌似已经原生支持了。
 `<leader>*`：前向搜索当前游标下的单词。
@@ -169,6 +206,7 @@ au FileType python set foldmethod=indent
 Plugin 'justinmk/vim-syntax-extra'
 Plugin 'octol/vim-cpp-enhanced-highlight'
 ```
+2018-04-20: 也不竟然，用了一段时间 `color_coded` 之后，发现问题还是不少，性能较差，有时候单词首字母着色错误。
 
 ## 语言支持
 

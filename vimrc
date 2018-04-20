@@ -1,12 +1,6 @@
 "-------------------------------------------------------------------------------
 " Encoding, Font, etc.
 
-" Normally 'encoding' will be equal to your current locale.
-" You can detect the locale via v:lang, e.g.,
-"     if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
-" and export LANG=... in ~/.bashrc to set the locale, e.g.,
-"     export LANG=zh_CN.utf8
-" You don't have to set it.
 set fileencodings=utf-8,ucs-bom,gbk,gb2312,big5,latin1
 
 if has("gui_running")
@@ -31,7 +25,7 @@ if has("gui_running")
     set guioptions-=T  " No toolbar
 endif
 
-" For Chinese
+" For multi-byte characters, e.g., Chinese.
 set formatoptions+=mM
 
 let mapleader = ","
@@ -54,10 +48,18 @@ call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
 
 Plugin 'vim-scripts/a.vim'
+
 Plugin 'godlygeek/tabular'
-Plugin 'majutsushi/tagbar'
+
 Plugin 'scrooloose/nerdtree'
+nmap <F2> :NERDTreeToggle<CR>
+
+Plugin 'majutsushi/tagbar'
+nmap <F8> :TagbarToggle<CR>
+
 Plugin 'hrp/EnhancedCommentify'
+let g:EnhCommentifyRespectIndent = 'Yes'
+let g:EnhCommentifyPretty = 'Yes'
 
 Plugin 'vim-airline/vim-airline'
 " NOTE: Airline has been supported by 'gruvbox' color scheme.
@@ -97,8 +99,17 @@ let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
 set conceallevel=0
 
-" C++
-Plugin 'jeaye/color_coded'
+" Libclang based highlight
+" Plugin 'jeaye/color_coded'
+Plugin 'justinmk/vim-syntax-extra'
+" Plugin 'octol/vim-cpp-enhanced-highlight'
+
+" Clang-format
+Plugin 'rhysd/vim-clang-format'
+" Format the current line
+autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :.ClangFormat<CR>
+" Format the selected
+autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
 
 " Python
 Plugin 'hdima/python-syntax'
@@ -115,6 +126,11 @@ let g:closetag_html_style=1
 if enable_ycm != 0
     Plugin 'Valloric/YouCompleteMe'
     Plugin 'rdnetto/YCM-Generator'
+
+    " Only map GoTo since it's very 'smart'.
+    nnoremap <leader>d :YcmCompleter GoTo<CR>
+    " GotoImprecise is faster.
+    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
 endif
 
 " Async Lint Engine
@@ -132,10 +148,9 @@ endif
 
 " Color schemes
 Plugin 'morhetz/gruvbox'
-" Atom OneDark theme.
+Plugin 'ayu-theme/ayu-vim'
+Plugin 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
 Plugin 'joshdick/onedark.vim'
-" Plugin 'drewtempelmeyer/palenight.vim'
-" Plugin 'ayu-theme/ayu-vim'
 
 call vundle#end()
 
@@ -144,52 +159,8 @@ call vundle#end()
 " do language-dependent indenting ('cindent' for C, C++, Java, C# files).
 filetype plugin indent on
 
-" Plugin options
-
-" tagbar
-let g:tagbar_type_go = {
-    \ 'ctagstype' : 'go',
-    \ 'kinds'     : [
-    \ 'p:package',
-    \ 'i:imports:1',
-    \ 'c:constants',
-    \ 'v:variables',
-    \ 't:types',
-    \ 'n:interfaces',
-    \ 'w:fields',
-    \ 'e:embedded',
-    \ 'm:methods',
-    \ 'r:constructor',
-    \ 'f:functions'
-    \ ],
-    \ 'sro' : '.',
-    \ 'kind2scope' : {
-    \ 't' : 'ctype',
-    \ 'n' : 'ntype'
-    \ },
-    \ 'scope2kind' : {
-    \ 'ctype' : 't',
-    \ 'ntype' : 'n'
-    \ },
-    \ 'ctagsbin'  : 'gotags',
-    \ 'ctagsargs' : '-sort -silent'
-    \ }
-
-nmap <F2> :NERDTreeToggle<CR>
-nmap <F8> :TagbarToggle<CR>
-
-let g:EnhCommentifyRespectIndent = 'Yes'
-let g:EnhCommentifyPretty = 'Yes'
-
 " No 'preview'.
 set completeopt=menuone,longest
-
-if enable_ycm != 0
-    " Only map GoTo since it's very 'smart'.
-    " GotoImprecise is faster.
-    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
-    nnoremap <leader>d :YcmCompleter GoTo<CR>
-endif
 
 "-------------------------------------------------------------------------------
 " General
@@ -219,8 +190,8 @@ endif
 noremap <leader>m :%s/<C-V><C-M>//ge<CR>
 
 " Automatically save and restore views for files.
-" This can restore cursor positions.
-" NOTE: Using * instead of ?* causes error.
+" Only for restoring cursor position.
+set viewoptions=cursor
 au BufWinLeave ?* mkview
 au VimEnter ?* silent loadview
 
@@ -239,36 +210,33 @@ set cindent
 " t0: no indent for function return type declaration.
 " g0: no indent for C++ scope declarations ('public:' 'private:' etc.)
 " :0: no indent for labels of switch().
-" TODO: Add j1 for properly indenting lambda (jN was new since 7.4).
-set cinoptions=t0,g0,:0
+" j1: properly indent lambda (jN was new since 7.4).
+set cinoptions=t0,g0,:0,j1
 
-" NOTE: After expand tab, type "C-v tab" to get the unexpanded tab.
-" If you have a file that contains tabs then you can convert them to spaces by
-" typing :retab.
-" :retab replaces a tab with &tabstop/ts number of spaces.
-" For tabstop: default 8. Better not to change it.
+set smarttab
 
-"set smarttab
-
-" TODO
-" For c, cfg, cmake, go, python, sql, vim, etc.
-set expandtab | set ts=4 | set sw=4
-au FileType cpp,html,lua,javascript,nsis,objc,ruby set expandtab | set ts=2 | set sw=2
+" After expand tab, type "C-v tab" to get the unexpanded tab.
+" See also :retab.
+set expandtab | set ts=4 | set sw=4  " Python, CSS, etc.
+au FileType c,cpp,html,lua,javascript,nsis set expandtab | set ts=2 | set sw=2
 au FileType htmldjango set expandtab | set ts=2 | set sw=2
 au FileType make set noexpandtab | set ts=8 | set sw=8
 
-" Useful for formating comments.
-set textwidth=80
+" Maximum width of text that is being inserted.
+" This width also controls 'gq' commands to format lines.
+au FileType c,cpp,python,vim set textwidth=80
 
-" Highlight column after 'textwidth'
-set colorcolumn=+1,+20
+" Highlight columns.
+" Multiple values are allowed, e.g., '81,101'.
+" NOTE: Don't use relative number because 'textwidth' could be 0.
+set colorcolumn=81
 
-" linebreak makes sense only when wrap is on & list is off (nolist).
+au FileType text,markdown,html,xml set wrap
+
+" Break line by word (when wrap is on).
 set linebreak
+" Indent the breaked lines.
 set breakindent
-
-set nowrap
-au FileType ant,html,markdown,xml,text set wrap
 
 "-------------------------------------------------------------------------------
 " User Interface
@@ -310,21 +278,16 @@ autocmd BufWinLeave * call clearmatches() " for performance
 "-------------------------------------------------------------------------------
 " Search
 
-set ignorecase " Always ignore since we have smartcase.
-set smartcase
+set ignorecase
+set smartcase " No ignore case if any upper case letter
 set incsearch
 set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
-set hlsearch
-map <silent> <leader><CR> :noh<CR>
 
-" The 'magic' option is on by default, but that isn't enough.
-" I find 'very magic' is what I want and it makes pattern really easy to use.
-" So, always insert a '\v' before the pattern to search to get 'very magic'.
-" Here is a find-replace example from 'http://briancarper.net/blog/448/':
-"   without magic:
-"       :%s/^\%(foo\)\{1,3}\(.\+\)bar$/\1/
-"   with very magic:
-"       :%s/\v^%(foo){1,3}(.+)bar$/\1/
+set hlsearch
+" Stop the search highlighting.
+map <silent> <leader><CR> :nohlsearch<CR>
+
+" Always insert a '\v' before the pattern to search to get 'very magic'.
 " :h /\v or :h magic
 nnoremap / /\v
 vnoremap / /\v
