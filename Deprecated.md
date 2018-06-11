@@ -208,6 +208,40 @@ Plugin 'octol/vim-cpp-enhanced-highlight'
 ```
 2018-04-20: 也不竟然，用了一段时间 `color_coded` 之后，发现问题还是不少，性能较差，有时候单词首字母着色错误。
 
+## 注释
+
+多年来一直使用 EnhancedCommentify：
+```vim
+Plugin 'hrp/EnhancedCommentify'
+let g:EnhCommentifyRespectIndent = 'Yes'
+let g:EnhCommentifyPretty = 'Yes'
+```
+最近切换到 tcomment：
+```vim
+Plugin 'tomtom/tcomment_vim'
+```
+
+### 比较
+在多行注释时，tcomment 的效果更好。
+EnhancedCommentify:
+```cpp
+    // if (!ec) {
+      // HttpSessionPtr session{
+        // new HttpSession(std::move(socket), GetRequestHandler())
+      // };
+      // session->Start();
+    // }
+```
+tcomment：
+```cpp
+    // if (!ec) {
+    //   HttpSessionPtr session{
+    //     new HttpSession(std::move(socket), GetRequestHandler())
+    //   };
+    //   session->Start();
+    // }
+```
+
 ## 语言支持
 
 ### Space Errors

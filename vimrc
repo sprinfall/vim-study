@@ -1,5 +1,35 @@
 "-------------------------------------------------------------------------------
-" Encoding, Font, etc.
+" Basic Settings
+
+function! Min(num1, num2)
+    return a:num1 < a:num2 ? a:num1 : a:num2
+endfunction
+
+
+let mapleader = ","
+let g:mapleader = ","
+
+set nocompatible
+
+set nobackup
+set nowritebackup
+set noswapfile
+
+nmap <leader>w :w!<CR>
+
+" Remove the Windows ^M
+noremap <leader>m :%s/<C-V><C-M>//ge<CR>
+
+" Automatically save and restore views for files.
+" Only for restoring cursor position.
+set viewoptions=cursor
+autocmd BufWinLeave ?* mkview
+autocmd VimEnter ?* silent loadview
+
+" Display dynamic information in tooltip based on where the mouse is pointing.
+if has("balloon_eval")
+    set ballooneval
+endif
 
 set fileencodings=utf-8,ucs-bom,gbk,gb2312,big5,latin1
 
@@ -25,180 +55,163 @@ if has("gui_running")
     set guioptions-=T  " No toolbar
 endif
 
+if has("win32")
+    set fileformats=dos,unix,mac
+else
+    set fileformats=unix,mac,dos
+endif
+
 " For multi-byte characters, e.g., Chinese.
 set formatoptions+=mM
 
-let mapleader = ","
-let g:mapleader = ","
-
-" &ft is empty for csv files, set to text.
-au BufRead,BufNewFile *.csv setfiletype text
-
 "-------------------------------------------------------------------------------
-" Vundle
+" Plug
 
-let enable_ycm = 1
+if empty(glob('~/.vim/autoload/plug.vim'))
+  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
-filetype off
+call plug#begin('~/.vim/plugged')
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+" Color schemes
+Plug 'morhetz/gruvbox'
+Plug 'ayu-theme/ayu-vim'
+Plug 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
+Plug 'joshdick/onedark.vim'
 
-" let Vundle manage Vundle
-Plugin 'VundleVim/Vundle.vim'
-
-Plugin 'vim-scripts/a.vim'
-
-Plugin 'godlygeek/tabular'
-
-Plugin 'scrooloose/nerdtree'
-nmap <F2> :NERDTreeToggle<CR>
-
-Plugin 'majutsushi/tagbar'
-nmap <F8> :TagbarToggle<CR>
-
-Plugin 'hrp/EnhancedCommentify'
-let g:EnhCommentifyRespectIndent = 'Yes'
-let g:EnhCommentifyPretty = 'Yes'
-
-Plugin 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline'
 " NOTE: Airline has been supported by 'gruvbox' color scheme.
-" Plugin 'vim-airline/vim-airline-themes'
+Plug 'vim-airline/vim-airline-themes'
 
-Plugin 'Yggdroot/indentLine'
+Plug 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
 let g:indentLine_color_term = 0
 let g:indentLine_char = '|'
 
-" Parentheses enhancements.
-Plugin 'kien/rainbow_parentheses.vim'
-let g:rbpt_colorpairs = [
-    \ ['brown', 'RoyalBlue3'],
-    \ ['Darkblue', 'SeaGreen3'],
-    \ ['darkgray', 'DarkOrchid3'],
-    \ ['darkgreen', 'firebrick3'],
-    \ ['darkcyan', 'RoyalBlue3'],
-    \ ['darkred', 'SeaGreen3'],
-    \ ['darkmagenta', 'DarkOrchid3'],
-    \ ['brown', 'firebrick3'],
-    \ ['gray', 'RoyalBlue3'],
-    \ ['black', 'SeaGreen3'],
-    \ ['darkmagenta', 'DarkOrchid3'],
-    \ ['Darkblue', 'firebrick3'],
-    \ ['darkgreen', 'RoyalBlue3'],
-    \ ['darkcyan', 'SeaGreen3'],
-    \ ['darkred', 'DarkOrchid3'],
-    \ ['red', 'firebrick3'],
-    \ ]
-let g:rbpt_max = 40
-let g:rbpt_loadcmd_toggle = 0
+Plug 'terryma/vim-multiple-cursors'
+
+" Async fuzzy finder
+Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
+
+Plug 'dyng/ctrlsf.vim'
+
+Plug 'godlygeek/tabular'
+
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+nmap <F2> :NERDTreeToggle<CR>
+
+Plug 'majutsushi/tagbar'
+nmap <F8> :TagbarToggle<CR>
+
+Plug 'tomtom/tcomment_vim'
+
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-repeat'
+
+" Auto-complete brackets.
+Plug 'Raimondi/delimitMate'
+" For Python docstring.
+autocmd FileType python let b:delimitMate_nesting_quotes = ['"']
+
+" Auto-close html/xml tags.
+Plug 'docunext/closetag.vim'
+let g:closetag_html_style=1
+
+" Supertab is obsoleted by YCM.
+" Plug 'ervandew/supertab'
+
+" C++ enhanced highlighting
+Plug 'octol/vim-cpp-enhanced-highlight'
+
+" Python enhanced highlighting
+Plug 'hdima/python-syntax'
+let python_highlight_all = 1
 
 " Markdown
-Plugin 'plasticboy/vim-markdown'
+Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
 set conceallevel=0
 
-" Libclang based highlight
-" Plugin 'jeaye/color_coded'
-Plugin 'justinmk/vim-syntax-extra'
-" Plugin 'octol/vim-cpp-enhanced-highlight'
+" Distraction-free writing.
+Plug 'junegunn/goyo.vim'
+
+Plug 'vim-scripts/a.vim'
 
 " Clang-format
-Plugin 'rhysd/vim-clang-format'
+Plug 'rhysd/vim-clang-format'
 " Format the current line
 autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :.ClangFormat<CR>
 " Format the selected
 autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
 
-" Python
-Plugin 'hdima/python-syntax'
-let python_highlight_all = 1
+" Async Lint Engine
+Plug 'w0rp/ale'
+
+" NOTE: Rename file cpplint.py to cpplint if add 'cpplint' linter.
+" NOTE: Don't use 'clang' because it cannot read compile_commands.json for the
+" correct compiler flags.
+let g:ale_linters = {
+\   'cpp': ['clangcheck', 'cpplint'],
+\   'python': ['autopep8', 'mypy', 'flake8'],
+\}
+
+let g:ale_sign_column_always = 1
+let g:ale_set_highlights = 1
+
+let g:ale_lint_on_enter = 1
+let g:ale_lint_on_text_changed = 'always'
+
+" Change the format of echo messages.
+let g:ale_echo_msg_error_str = 'E'
+let g:ale_echo_msg_warning_str = 'W'
+let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+
+nmap <leader>k <Plug>(ale_previous_wrap)
+nmap <leader>j <Plug>(ale_next_wrap)
+
+" https://stackoverflow.com/a/23762720
+autocmd FileType python setlocal formatprg=autopep8\ -
 
 " Auto-completion plugin for Python based on jedi.
-" Please install jedi with pip.
-Plugin 'davidhalter/jedi-vim'
+Plug 'davidhalter/jedi-vim'
+let g:jedi#completions_command = "<C-N>"
 
-" Auto-close html/xml tags.
-Plugin 'docunext/closetag.vim'
-let g:closetag_html_style=1
+Plug 'Valloric/YouCompleteMe'
+" Disable YCM's diagnostic since we have ALE.
+let g:ycm_show_diagnostics_ui = 0
+let g:ycm_key_invoke_completion = '<C-N>'
+let g:ycm_seed_identifiers_with_syntax = 1
+let g:ycm_add_preview_to_completeopt = 1
+let g:ycm_autoclose_preview_window_after_completion = 1
+let g:ycm_autoclose_preview_window_after_insertion = 1
+" Only map GoTo since it's very 'smart'.
+nnoremap <leader>d :YcmCompleter GoTo<CR>
+" GotoImprecise is faster.
+nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
 
-if enable_ycm != 0
-    Plugin 'Valloric/YouCompleteMe'
-    Plugin 'rdnetto/YCM-Generator'
+Plug 'vhdirk/vim-cmake'
 
-    " Only map GoTo since it's very 'smart'.
-    nnoremap <leader>d :YcmCompleter GoTo<CR>
-    " GotoImprecise is faster.
-    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
-endif
+Plug 'airblade/vim-gitgutter'
 
-" Async Lint Engine
-Plugin 'w0rp/ale'
+call plug#end()
 
-" Auto-complete brackets.
-Plugin 'Raimondi/delimitMate'
-" For Python docstring.
-au FileType python let b:delimitMate_nesting_quotes = ['"']
+" &ft is empty for csv files, set as text.
+autocmd BufRead,BufNewFile *.csv setfiletype text
 
-if enable_ycm == 0
-    " Supertab is obsoleted by YCM.
-    Plugin 'ervandew/supertab'
-endif
+set completeopt=menu,preview
 
-" Color schemes
-Plugin 'morhetz/gruvbox'
-Plugin 'ayu-theme/ayu-vim'
-Plugin 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
-Plugin 'joshdick/onedark.vim'
-
-call vundle#end()
-
-" Enable file type detection.
-" Use the default filetype settings. Also load indent files to automatically
-" do language-dependent indenting ('cindent' for C, C++, Java, C# files).
-filetype plugin indent on
-
-" No 'preview'.
-set completeopt=menuone,longest
+" Source .vimrc if present in working dir.
+set exrc
+set secure
 
 "-------------------------------------------------------------------------------
-" General
+" Color Scheme
 
 set background=dark
-syntax enable
 colorscheme gruvbox
-au BufEnter * :syntax sync fromstart
-
-set nocompatible
-set history=400
-
-set nobackup
-set nowritebackup
-set noswapfile
-
-nmap <leader>w :w!<CR>
-nmap <leader>f :find<CR>
-
-if has("win32")
-    set ffs=dos,unix,mac
-else
-    set ffs=unix,mac,dos
-endif
-
-" Remove the Windows ^M
-noremap <leader>m :%s/<C-V><C-M>//ge<CR>
-
-" Automatically save and restore views for files.
-" Only for restoring cursor position.
-set viewoptions=cursor
-au BufWinLeave ?* mkview
-au VimEnter ?* silent loadview
-
-" Display dynamic information in tooltip based on where the mouse is pointing.
-if has("balloon_eval")
-    set ballooneval
-endif
 
 "-------------------------------------------------------------------------------
 " Format (indent, tabs, wrap, etc.)
@@ -207,31 +220,34 @@ endif
 " You can also try smartindent, autoindent.
 set cindent
 
-" t0: no indent for function return type declaration.
-" g0: no indent for C++ scope declarations ('public:' 'private:' etc.)
-" :0: no indent for labels of switch().
-" j1: properly indent lambda (jN was new since 7.4).
-set cinoptions=t0,g0,:0,j1
+" t0: no indent for function return type declaration
+" g1: indent 1 character for C++ scope declarations ('public:', etc.)
+" h1: indent 1 character for statements occurring after C++ scope declarations
+" N-s: no indent inside C++ namespace
+" (0: align multi-line parameters.
+" j1: properly indent lambda.
+set cinoptions=t0,g1,h1,N-s,(0,j1
 
 set smarttab
 
 " After expand tab, type "C-v tab" to get the unexpanded tab.
 " See also :retab.
-set expandtab | set ts=4 | set sw=4  " Python, CSS, etc.
-au FileType c,cpp,html,lua,javascript,nsis set expandtab | set ts=2 | set sw=2
-au FileType htmldjango set expandtab | set ts=2 | set sw=2
-au FileType make set noexpandtab | set ts=8 | set sw=8
+set expandtab | set tabstop=4 | set shiftwidth=4  " Python, CSS, etc.
+autocmd FileType c,cpp,html,htmldjango,lua,javascript,nsis
+    \ set expandtab | set tabstop=2 | set shiftwidth=2
+autocmd FileType make set noexpandtab | set tabstop=8 | set shiftwidth=8
 
 " Maximum width of text that is being inserted.
 " This width also controls 'gq' commands to format lines.
-au FileType c,cpp,python,vim set textwidth=80
+autocmd FileType c,cpp,python,vim set textwidth=80
 
 " Highlight columns.
 " Multiple values are allowed, e.g., '81,101'.
 " NOTE: Don't use relative number because 'textwidth' could be 0.
 set colorcolumn=81
+highlight ColorColumn ctermbg=darkgray
 
-au FileType text,markdown,html,xml set wrap
+autocmd FileType text,markdown,html,xml set wrap
 
 " Break line by word (when wrap is on).
 set linebreak
@@ -250,8 +266,6 @@ set wildmenu
 set wildmode="list:longest"
 set ruler
 set cmdheight=2
-
-" You may also want to try 'relativenumber'.
 set number
 
 set lazyredraw
@@ -280,17 +294,19 @@ autocmd BufWinLeave * call clearmatches() " for performance
 
 set ignorecase
 set smartcase " No ignore case if any upper case letter
+
 set incsearch
-set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
 
 set hlsearch
-" Stop the search highlighting.
 map <silent> <leader><CR> :nohlsearch<CR>
+
+set gdefault " :%s/foo/bar/ -> :%s/foo/bar/g
 
 " Always insert a '\v' before the pattern to search to get 'very magic'.
 " :h /\v or :h magic
-nnoremap / /\v
-vnoremap / /\v
+" TODO: Remove since I rarely use regex.
+" nnoremap / /\v
+" vnoremap / /\v
 
 set errorbells
 set novisualbell
@@ -340,7 +356,7 @@ func! DeleteTrailingWS()
     %s/\s\+$//ge
     exec "normal `z"
 endfunc
-au BufWrite * :call DeleteTrailingWS()
+autocmd BufWrite * :call DeleteTrailingWS()
 map <leader>W :call DeleteTrailingWS()<CR>
 
 " Remove indenting on empty lines.
