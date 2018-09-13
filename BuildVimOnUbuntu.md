@@ -19,6 +19,19 @@ Configure:
 ```plain
 $ ./configure --prefix=/usr/local --with-features=huge --with-x --enable-multibyte --enable-luainterp=yes --enable-python3interp=yes --enable-xim --enable-fontset --disable-cscope --disable-largefile
 ```
+Or (with line breaks):
+```plain
+$ ./configure --prefix=/usr/local \
+   --with-features=huge \
+   --with-x \
+   --enable-multibyte \
+   --enable-luainterp=yes \
+   --enable-python3interp=yes \
+   --enable-xim \
+   --enable-fontset \
+   --disable-cscope \
+   --disable-largefile
+```
 These configure options should be sufficient for most use cases.
 
 Build:
