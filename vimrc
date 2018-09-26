@@ -67,23 +67,32 @@ set formatoptions+=mM
 "-------------------------------------------------------------------------------
 " Plug
 
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-endif
+" if empty(glob('~/.vim/autoload/plug.vim'))
+"   silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+"     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+"   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+" endif
 
-call plug#begin('~/.vim/plugged')
+let g:enable_ycm = 1
+
+if has("win32")
+    " I don't use YCM (for C++) on Windows.
+    let g:enable_ycm = 0
+
+    call plug#begin('~/vimfiles/plugged')
+else
+    call plug#begin('~/.vim/plugged')
+endif
 
 " Color schemes
 Plug 'morhetz/gruvbox'
-Plug 'ayu-theme/ayu-vim'
-Plug 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
-Plug 'joshdick/onedark.vim'
+" Plug 'ayu-theme/ayu-vim'
+" Plug 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
+" Plug 'joshdick/onedark.vim'
 
 Plug 'vim-airline/vim-airline'
 " NOTE: Airline has been supported by 'gruvbox' color scheme.
-Plug 'vim-airline/vim-airline-themes'
+" Plug 'vim-airline/vim-airline-themes'
 
 Plug 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
@@ -120,13 +129,15 @@ Plug 'docunext/closetag.vim'
 let g:closetag_html_style=1
 
 " Supertab is obsoleted by YCM.
-" Plug 'ervandew/supertab'
+if !g:enable_ycm
+    Plug 'ervandew/supertab'
+endif
 
 " C++ enhanced highlighting
-Plug 'octol/vim-cpp-enhanced-highlight'
+Plug 'octol/vim-cpp-enhanced-highlight', { 'for': 'cpp' }
 
 " Python enhanced highlighting
-Plug 'hdima/python-syntax'
+Plug 'hdima/python-syntax', { 'for': 'python' }
 let python_highlight_all = 1
 
 " Markdown
@@ -136,19 +147,19 @@ let g:vim_markdown_conceal = 0
 set conceallevel=0
 
 " Distraction-free writing.
-Plug 'junegunn/goyo.vim'
+" Plug 'junegunn/goyo.vim'
 
 Plug 'vim-scripts/a.vim'
 
 " Clang-format
-Plug 'rhysd/vim-clang-format'
+Plug 'rhysd/vim-clang-format', { 'for': 'cpp' }
 " Format the current line
 autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :.ClangFormat<CR>
 " Format the selected
 autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
 
 " Async Lint Engine
-Plug 'w0rp/ale'
+Plug 'w0rp/ale', { 'for': 'cpp,python' }
 
 " NOTE: Rename file cpplint.py to cpplint if add 'cpplint' linter.
 " NOTE: Don't use 'clang' because it cannot read compile_commands.json for the
@@ -161,7 +172,8 @@ let g:ale_linters = {
 let g:ale_sign_column_always = 1
 let g:ale_set_highlights = 1
 
-let g:ale_lint_on_enter = 1
+" Don't lint on enter for loading performance.
+let g:ale_lint_on_enter = 0
 let g:ale_lint_on_text_changed = 'always'
 
 " Change the format of echo messages.
@@ -176,25 +188,29 @@ nmap <leader>j <Plug>(ale_next_wrap)
 autocmd FileType python setlocal formatprg=autopep8\ -
 
 " Auto-completion plugin for Python based on jedi.
-Plug 'davidhalter/jedi-vim'
+Plug 'davidhalter/jedi-vim', { 'for': 'python' }
 let g:jedi#completions_command = "<C-N>"
 
-Plug 'Valloric/YouCompleteMe'
-" Disable YCM's diagnostic since we have ALE.
-let g:ycm_show_diagnostics_ui = 0
-let g:ycm_key_invoke_completion = '<C-N>'
-let g:ycm_seed_identifiers_with_syntax = 1
-let g:ycm_add_preview_to_completeopt = 1
-let g:ycm_autoclose_preview_window_after_completion = 1
-let g:ycm_autoclose_preview_window_after_insertion = 1
-" Only map GoTo since it's very 'smart'.
-nnoremap <leader>d :YcmCompleter GoTo<CR>
-" GotoImprecise is faster.
-nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
+if g:enable_ycm
+    Plug 'Valloric/YouCompleteMe'
+    " Disable YCM's diagnostic since we have ALE.
+    let g:ycm_show_diagnostics_ui = 0
+    let g:ycm_key_invoke_completion = '<C-N>'
+    let g:ycm_seed_identifiers_with_syntax = 1
+    let g:ycm_add_preview_to_completeopt = 1
+    let g:ycm_autoclose_preview_window_after_completion = 1
+    let g:ycm_autoclose_preview_window_after_insertion = 1
+    " Only map GoTo since it's very 'smart'.
+    nnoremap <leader>d :YcmCompleter GoTo<CR>
+    " GotoImprecise is faster.
+    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
+endif
 
-Plug 'vhdirk/vim-cmake'
+Plug 'vhdirk/vim-cmake', { 'for': 'cmake' }
 
-Plug 'airblade/vim-gitgutter'
+" Disabled because it hugely slows down the file loading on large Git
+" repositories. (2018-09-26)
+" Plug 'airblade/vim-gitgutter'
 
 call plug#end()
 
