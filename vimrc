@@ -151,12 +151,9 @@ set conceallevel=0
 
 Plug 'vim-scripts/a.vim'
 
-" Clang-format
-Plug 'rhysd/vim-clang-format', { 'for': 'cpp' }
-" Format the current line
-autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :.ClangFormat<CR>
-" Format the selected
-autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
+" Autoformat (clang-format)
+Plug 'Chiel92/vim-autoformat'
+noremap <F3> :Autoformat<CR>
 
 " Async Lint Engine
 Plug 'w0rp/ale', { 'for': 'cpp,python' }
@@ -376,7 +373,7 @@ autocmd BufWrite * :call DeleteTrailingWS()
 map <leader>W :call DeleteTrailingWS()<CR>
 
 " Remove indenting on empty lines.
-map <F3> :%s/\s*$//g<CR>:noh<CR>''<CR>
+map <F4> :%s/\s*$//g<CR>:noh<CR>''<CR>
 
 "-------------------------------------------------------------------------------
 " Command Line
