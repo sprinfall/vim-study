@@ -36,7 +36,8 @@ if has("gui_running")
         " TODO Verify
         set guifont=Andale\ Mono:h13,Courier\ New:h13
     elseif has("gui_win32")
-        set guifont=DejaVu_Sans_Mono:h11:cDEFAULT,Courier_New:h11:cDEFAULT
+        set guifont=Consolas:h11:cDEFAULT,Courier_New:h11:cDEFAULT
+
         " Need to download 'GB18030 Support Package' from MS.com for
         " SimSun-18030.
         " Make sure 'encoding' is "utf-8" and "guifontset" is empty or invalid.
