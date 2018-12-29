@@ -1,10 +1,6 @@
+
 "-------------------------------------------------------------------------------
 " Basic Settings
-
-function! Min(num1, num2)
-    return a:num1 < a:num2 ? a:num1 : a:num2
-endfunction
-
 
 let mapleader = ","
 let g:mapleader = ","
@@ -64,27 +60,27 @@ endif
 " For multi-byte characters, e.g., Chinese.
 set formatoptions+=mM
 
+" NOTE: YCM will set the complete options accordingly.
+" set completeopt=menuone,preview
+
 "-------------------------------------------------------------------------------
 " Plug
 
+" TODO: Fix this
 " if empty(glob('~/.vim/autoload/plug.vim'))
 "   silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
 "     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 "   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 " endif
 
-let g:enable_ycm = 1
-
 if has("win32")
-    " I don't use YCM (for C++) on Windows.
-    let g:enable_ycm = 0
-
     call plug#begin('~/vimfiles/plugged')
 else
     call plug#begin('~/.vim/plugged')
 endif
 
 " Color schemes
+" Gruvbox is my favorite, do just disable others.
 Plug 'morhetz/gruvbox'
 " Plug 'ayu-theme/ayu-vim'
 " Plug 'drewtempelmeyer/palenight.vim'  " Based on OneDark, almost the same.
@@ -99,7 +95,10 @@ let g:indentLine_noConcealCursor = 1
 let g:indentLine_color_term = 0
 let g:indentLine_char = '|'
 
+" <C-n> Select next; <C-x> Skip current; <C-p> Remove.
 Plug 'terryma/vim-multiple-cursors'
+" Default key for Select All doesn't work (:h multiple-cursors-faq).
+let g:multi_cursor_select_all_key = '<C-a>'
 
 " Async fuzzy finder
 Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
@@ -116,7 +115,10 @@ nmap <F8> :TagbarToggle<CR>
 
 Plug 'tomtom/tcomment_vim'
 
+" ys: create; ds: delete; cs: change.
+" E.g., ysaw": surround current word with "".
 Plug 'tpope/vim-surround'
+
 Plug 'tpope/vim-repeat'
 
 " Auto-complete brackets.
@@ -128,10 +130,12 @@ autocmd FileType python let b:delimitMate_nesting_quotes = ['"']
 Plug 'docunext/closetag.vim'
 let g:closetag_html_style=1
 
-" Supertab is obsoleted by YCM.
-if !g:enable_ycm
-    Plug 'ervandew/supertab'
-endif
+" Snippets
+Plug 'SirVer/ultisnips'
+" For working with YCM (default: Tab)
+let g:UltiSnipsExpandTrigger='<C-j>'
+" TODO: Customize my own snippets (for C++).
+Plug 'honza/vim-snippets'
 
 " C++ enhanced highlighting
 Plug 'octol/vim-cpp-enhanced-highlight', { 'for': 'cpp' }
@@ -146,17 +150,21 @@ let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
 set conceallevel=0
 
-" Distraction-free writing.
-" Plug 'junegunn/goyo.vim'
-
 Plug 'vim-scripts/a.vim'
 
 " Autoformat (clang-format)
 Plug 'Chiel92/vim-autoformat'
 noremap <F3> :Autoformat<CR>
 
+" <leader>p or :Prettier[Async]
+" Add @format to file for auto trigger on save.
+Plug 'prettier/vim-prettier', {
+\   'do': 'npm install',
+\   'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'markdown', 'yaml', 'html']
+\}
+
 " Async Lint Engine
-Plug 'w0rp/ale', { 'for': 'cpp,python' }
+Plug 'w0rp/ale', { 'for': 'cpp,python,javascript' }
 
 " NOTE: Rename file cpplint.py to cpplint if add 'cpplint' linter.
 " NOTE: Don't use 'clang' because it cannot read compile_commands.json for the
@@ -164,6 +172,12 @@ Plug 'w0rp/ale', { 'for': 'cpp,python' }
 let g:ale_linters = {
 \   'cpp': ['clangcheck', 'cpplint'],
 \   'python': ['autopep8', 'mypy', 'flake8'],
+\   'javascript': ['eslint'],
+\}
+
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines'],
+\   'javascript': ['eslint'],
 \}
 
 let g:ale_sign_column_always = 1
@@ -182,39 +196,63 @@ nmap <leader>k <Plug>(ale_previous_wrap)
 nmap <leader>j <Plug>(ale_next_wrap)
 
 " https://stackoverflow.com/a/23762720
+" TODO: Why here?
 autocmd FileType python setlocal formatprg=autopep8\ -
 
-" Auto-completion plugin for Python based on jedi.
-Plug 'davidhalter/jedi-vim', { 'for': 'python' }
-let g:jedi#completions_command = "<C-N>"
+" YCM
 
-if g:enable_ycm
-    Plug 'Valloric/YouCompleteMe'
-    " Disable YCM's diagnostic since we have ALE.
-    let g:ycm_show_diagnostics_ui = 0
-    let g:ycm_key_invoke_completion = '<C-N>'
-    let g:ycm_seed_identifiers_with_syntax = 1
-    let g:ycm_add_preview_to_completeopt = 1
-    let g:ycm_autoclose_preview_window_after_completion = 1
-    let g:ycm_autoclose_preview_window_after_insertion = 1
-    " Only map GoTo since it's very 'smart'.
-    nnoremap <leader>d :YcmCompleter GoTo<CR>
-    " GotoImprecise is faster.
-    nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
-endif
+Plug 'Valloric/YouCompleteMe'
+
+" Disable YCM's diagnostic since we have ALE.
+let g:ycm_show_diagnostics_ui = 0
+
+" Invoke the completion menu anywhere (default: <C-Space>).
+" NOTE: <C-Space> conflicts with Chinese input method.
+let g:ycm_key_invoke_completion = '<C-N>'
+
+let g:ycm_seed_identifiers_with_syntax = 1
+
+" Preview window is useful to view the function arguments.
+let g:ycm_add_preview_to_completeopt = 1
+
+" Don't close preview just after completion because the preview also
+" provides useful argument information.
+" Do close preview after exit from insert mode so that the user doesn't have
+" to close it manually with ':pc[close]' or 'CTRL-W CTRL-Z'.
+let g:ycm_autoclose_preview_window_after_completion = 0
+let g:ycm_autoclose_preview_window_after_insertion = 1
+
+" Only map GoTo since it's very 'smart'.
+nnoremap <leader>d :YcmCompleter GoTo<CR>
+" GotoImprecise is faster.
+nnoremap <leader>g :YcmCompleter GoToImprecise<CR>
+" Go to type definition (JavaScript & TypeScript only).
+nnoremap <leader>t :YcmCompleter GoToType<CR>
+
+" JavaScript, Node.js
+
+" Improved indentation and syntax support.
+Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
+
+" Set makeprg and error format for executing JS with Node.js.
+Plug 'felixge/vim-nodejs-errorformat', { 'for': 'javascript' }
+
+" NOTE: Adding ", { 'for': 'javascript' }" will not work.
+Plug 'moll/vim-node'
 
 Plug 'vhdirk/vim-cmake', { 'for': 'cmake' }
 
 " Disabled because it hugely slows down the file loading on large Git
 " repositories. (2018-09-26)
-" Plug 'airblade/vim-gitgutter'
+Plug 'airblade/vim-gitgutter'
+
+" Distraction-free writing.
+Plug 'junegunn/goyo.vim'
 
 call plug#end()
 
 " &ft is empty for csv files, set as text.
 autocmd BufRead,BufNewFile *.csv setfiletype text
-
-set completeopt=menu,preview
 
 " Source .vimrc if present in working dir.
 set exrc
@@ -300,7 +338,7 @@ autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches() " for performance
 
 " Highlight current line.
-" set cursorline
+set cursorline
 
 "-------------------------------------------------------------------------------
 " Search
@@ -342,8 +380,9 @@ if has("spell")
 endif
 
 " Switch windows
-map <C-j> <C-W>j
-map <C-k> <C-W>k
+" NOTE: Leave <C-j> and <C-k> for UltiSnips. (TODO: Verify)
+" map <C-j> <C-W>j
+" map <C-k> <C-W>k
 map <C-h> <C-W>h
 map <C-l> <C-W>l
 
@@ -354,13 +393,16 @@ map <up>    :bf<CR>
 map <down>  :bl<CR>
 
 " Abbreviations
-iabbrev xname Adam Gu
-iabbrev xmail sprinfall@gmail.com
+" TODO: Use UtliSnips instead?
+iabbrev xname Chunting Gu
+iabbrev xmail chunting.gu@outlook.com
 iabbrev xfile <c-r>=expand("%:t")<CR>
 if exists("*strftime")
     iabbrev xdate <c-r>=strftime("%Y-%m-%d")<CR>
     iabbrev xtime <c-r>=strftime("%H:%M:%S")<CR>
 endif
+" Shortcut of 'console.log' for JavaScript.
+autocmd FileType javascript iabbrev clog console.log
 
 " Delete trailing white spaces.
 func! DeleteTrailingWS()
@@ -406,24 +448,22 @@ cnoremap $th tabnew ~/
 cnoremap $td tabnew ~/Desktop/
 
 "-------------------------------------------------------------------------------
-" Run (TODO: Consider to use make)
+" Make
 
-autocmd FileType cpp map <buffer> <leader><space> :!g++ -S %<CR>
+" Execute :make and open the quickfix window if there was any error.
+nmap <leader><leader> :w<CR>:make! \| botright cwindow<CR>
 
-autocmd FileType vim map <buffer> <leader><space> :source %<CR>
+autocmd FileType vim nmap <buffer> <leader><space> :source %<CR>
 
-autocmd FileType lua map <buffer> <leader><space> :!lua %<CR>
+autocmd FileType lua nmap <buffer> <leader><space> :!lua %<CR>
 
-autocmd FileType python map <buffer> <leader><space> :!python %<CR>
-autocmd FileType python map <buffer> <leader>t :!python -m doctest -v %<CR>
+autocmd FileType python nmap <buffer> <leader><space> :!python %<CR>
+autocmd FileType python nmap <buffer> <leader>t :!python -m doctest -v %<CR>
 " %:r file name without extension. Help 'expand' for details.
-autocmd FileType python map <buffer> <leader>u :!python -m unittest -v %:r<CR>
-
-autocmd FileType javascript map <buffer> <leader><space> :!node %<CR>
-
-autocmd FileType rust map <buffer> <leader><space> :RustRun<CR>
+autocmd FileType python nmap <buffer> <leader>u :!python -m unittest -v %:r<CR>
 
 if has('win32')
     " Please add the path of makensis.exe to PATH.
     autocmd FileType nsis map <buffer> <leader><space> :!makensis.exe %<CR>
 endif
+
