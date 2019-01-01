@@ -33,8 +33,7 @@ if has("gui_running")
     if has("gui_gtk")
         set guifont=Source\ Code\ Pro\ 13
     elseif has("gui_macvim")
-        " TODO Verify
-        set guifont=Andale\ Mono:h13,Courier\ New:h13
+        set guifont=AndaleMono:h13
     elseif has("gui_win32")
         set guifont=Consolas:h11:cDEFAULT,Courier_New:h11:cDEFAULT
 
@@ -165,7 +164,8 @@ Plug 'prettier/vim-prettier', {
 \}
 
 " Async Lint Engine
-Plug 'w0rp/ale', { 'for': 'cpp,python,javascript' }
+" NOTE: Adding ", { 'for': 'xxx' }" will not work.
+Plug 'w0rp/ale'
 
 " NOTE: Rename file cpplint.py to cpplint if add 'cpplint' linter.
 " NOTE: Don't use 'clang' because it cannot read compile_commands.json for the
