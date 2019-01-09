@@ -87,9 +87,15 @@ Plug 'morhetz/gruvbox'
 " Plug 'joshdick/onedark.vim'
 
 Plug 'vim-airline/vim-airline'
-" NOTE: Airline has been supported by 'gruvbox' color scheme.
-" Plug 'vim-airline/vim-airline-themes'
+" NOTE: Need to install a patched font (e.g., 'Noto Mono for Powerline.ttf').
+let g:airline_powerline_fonts = 1
+" let g:airline_section_b = '%-0.10{getcwd()}'
 
+Plug 'vim-airline/vim-airline-themes'
+" Themes: simple, dark, light, deus, etc.
+let g:airline_theme = 'light'
+
+" Another choice is 'nathanaelkane/vim-indent-guides'.
 Plug 'Yggdroot/indentLine'
 let g:indentLine_noConcealCursor = 1
 let g:indentLine_color_term = 0
@@ -110,6 +116,7 @@ Plug 'godlygeek/tabular'
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
 nmap <F2> :NERDTreeToggle<CR>
 
+" Need ctags installed, e.g., 'universal-ctags/ctags'.
 Plug 'majutsushi/tagbar'
 nmap <F8> :TagbarToggle<CR>
 
@@ -148,7 +155,6 @@ let python_highlight_all = 1
 Plug 'plasticboy/vim-markdown', { 'for': 'markdown' }
 let g:vim_markdown_folding_disabled = 1
 let g:vim_markdown_conceal = 0
-set conceallevel=0
 
 Plug 'vim-scripts/a.vim'
 
@@ -232,10 +238,16 @@ nnoremap <leader>t :YcmCompleter GoToType<CR>
 
 " JavaScript, Node.js
 
-" Improved indentation and syntax support.
-Plug 'pangloss/vim-javascript', { 'for': 'javascript' }
+" Forked from 'jelera/vim-javascript-syntax' with better support for ES6.
+Plug 'othree/yajs.vim'
+" ECMAScript future syntax. Need to work with yajs.vim.
+Plug 'othree/es.next.syntax.vim'
 
-" Set makeprg and error format for executing JS with Node.js.
+" Improved indentation and syntax support.
+" NOTE: Disabled because the syntax highlighting doesn't work at all for me.
+" Plug 'pangloss/vim-javascript'
+
+" Set 'makeprg' and 'errorformat' for executing JS with Node.
 Plug 'felixge/vim-nodejs-errorformat', { 'for': 'javascript' }
 
 " NOTE: Adding ", { 'for': 'javascript' }" will not work.
@@ -245,7 +257,7 @@ Plug 'vhdirk/vim-cmake', { 'for': 'cmake' }
 
 " Disabled because it hugely slows down the file loading on large Git
 " repositories. (2018-09-26)
-Plug 'airblade/vim-gitgutter'
+" Plug 'airblade/vim-gitgutter'
 
 " Distraction-free writing.
 Plug 'junegunn/goyo.vim'
@@ -254,6 +266,9 @@ call plug#end()
 
 " &ft is empty for csv files, set as text.
 autocmd BufRead,BufNewFile *.csv setfiletype text
+
+" TODO
+set conceallevel=0
 
 " Source .vimrc if present in working dir.
 set exrc
@@ -339,6 +354,7 @@ autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches() " for performance
 
 " Highlight current line.
+" NOTE: Disable it if you feel lag while moving the cursor.
 set cursorline
 
 "-------------------------------------------------------------------------------
@@ -394,16 +410,14 @@ map <up>    :bf<CR>
 map <down>  :bl<CR>
 
 " Abbreviations
-" TODO: Use UtliSnips instead?
 iabbrev xname Chunting Gu
 iabbrev xmail chunting.gu@outlook.com
 iabbrev xfile <c-r>=expand("%:t")<CR>
+" NOTE: UtliSnips provides datetime snippets, too.
 if exists("*strftime")
     iabbrev xdate <c-r>=strftime("%Y-%m-%d")<CR>
     iabbrev xtime <c-r>=strftime("%H:%M:%S")<CR>
 endif
-" Shortcut of 'console.log' for JavaScript.
-autocmd FileType javascript iabbrev clog console.log
 
 " Delete trailing white spaces.
 func! DeleteTrailingWS()
@@ -452,8 +466,10 @@ cnoremap $td tabnew ~/Desktop/
 " Make
 
 " Execute :make and open the quickfix window if there was any error.
+" TODO: Add <buffer> ?
 nmap <leader><leader> :w<CR>:make! \| botright cwindow<CR>
 
+" TODO: Use make instead ?
 autocmd FileType vim nmap <buffer> <leader><space> :source %<CR>
 
 autocmd FileType lua nmap <buffer> <leader><space> :!lua %<CR>
